@@ -1,8 +1,8 @@
-name: FE CD - PROD
+name: Legacy AWS FE CD - PROD
 
 on:
   workflow_run:
-    workflows: ["FE CI - PROD"]
+    workflows: ["Legacy AWS FE CI - PROD"]
     types: [completed]
 
 permissions:

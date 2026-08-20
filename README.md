@@ -22,6 +22,22 @@
 
 ---
 
+## API and image upload contract
+
+Frontend API requests use the same origin prefix below. Caddy removes `/api` before proxying to the backend.
+
+```js
+API_BASE_URL: "/api"
+```
+
+Images are uploaded to the backend as `multipart/form-data`; the browser does not call S3 directly.
+
+```text
+POST /api/images/profile  → file
+POST /api/images/posts    → files (maximum 5)
+GET  /uploads/...         → Caddy serves the shared upload volume
+```
+
 ## 1. Project Introduction
 
 ### What is WePick?
@@ -42,7 +58,7 @@
 [Vote]      오늘의 토픽 조회 → A/B 선택 → 투표 → 실시간 결과 확인 (페이지 이동 없이)
 [Post]      게시글 CRUD → 댓글 → 좋아요 → 무한 스크롤 페이지네이션
 [Auth]      회원가입 → 로그인(HTTP-only Cookie) → 프로필 관리
-[Image]     Presigned URL → S3 직접 업로드 → 즉시 미리보기
+[Image]     Backend multipart 업로드 → Local volume 저장 → /uploads 정적 제공
 ```
 
 ### Screenshots
@@ -67,7 +83,7 @@
 | **JavaScript**     | ES6 Modules                | 클라이언트 사이드 로직, API 연동   |
 | **Styling**        | Custom CSS + Bootstrap 5.3 | 디자인 토큰 기반 스타일링          |
 | **Authentication** | HTTP-only Cookie           | 보안 토큰 관리 (서버 자동 처리)    |
-| **Image Upload**   | S3 Presigned URL           | 클라이언트 직접 업로드             |
+| **Image Upload**   | Backend multipart API      | Local volume 저장, Caddy 정적 제공 |
 
 ### CI/CD Pipeline
 
