@@ -1,5 +1,11 @@
 # WePick Frontend
 
+## 저장소 역할과 제품 설계
+
+이 저장소는 **화면 구현·상호작용·컴포넌트**를 관리합니다. 제품·정책·ERD·화면 정의서·와이어프레임·공통 API 설계의 기준은 [wepick-product](https://github.com/W-Gain/wepick-product)입니다. [문서 관리 규칙](https://github.com/W-Gain/wepick-product/blob/main/docs/working/repository-and-document-guide.md)을 따르며 설계 원본을 복사하지 않습니다.
+
+아래 구현 설명은 기존 구현에 관한 기록이며 최신 제품 요구사항을 대신하지 않습니다. 현재 동작은 코드·검증 결과로 확인하고, 목표와의 차이는 [Product 전환 작업](https://github.com/W-Gain/wepick-product/blob/main/docs/working/documentation-backlog.md)에 연결합니다.
+
 ![header_banner](./assets/imgs/header_banner.png)
 
 > 매일 새로운 A/B 투표와 커뮤니티 기능을 제공하는 프론트엔드 웹 애플리케이션
@@ -474,19 +480,22 @@ function goBack() {
 
 ### Project Documents
 
-| Document          | Description              | Link                                     |
-| ----------------- | ------------------------ | ---------------------------------------- |
-| PRD               | 제품 요구사항 명세       | [docs/prd.md](./docs/prd.md)             |
-| CHANGELOG         | 변경 이력                | [docs/CHANGELOG.md](./docs/CHANGELOG.md) |
-| Development Guide | 개발 가이드 (AI Agent용) | [Agents.md](./Agents.md)                 |
+| 문서 | 위치 |
+| --- | --- |
+| 제품·정책·화면 설계 | [Product](https://github.com/W-Gain/wepick-product) |
+| 내부 구조·구현 설명 | [Frontend Architecture](#2-frontend-architecture), [Internal Logic](#3-internal-logic--design-system) |
+| 공유 컴포넌트 | [Components](public/shared/components/README.md) |
+| 개발 작업 지침 | [AGENTS.md](AGENTS.md) |
 
 ### External Resources
+
+아래 API Sheets·ERDCloud는 출처를 보존한 기존 외부 참조입니다. 접근 가능 여부·내용·최신성은 미확인으로, 현재 설계 기준은 Product를 따릅니다.
 
 | Resource                   | Link                                                                                                                           |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | API 명세서 (Google Sheets) | [Link](https://docs.google.com/spreadsheets/d/14p7ppmWjfA4FWeHc4dvRo8pL8MjHQtqkd7Q5522O754/edit?gid=1878554884#gid=1878554884) |
 | ERD 다이어그램             | [ERDCloud](https://www.erdcloud.com/d/w4FDHBTdYa74Jp4vn)                                                                       |
-| Backend Repository         | [3-ellim-lee-community-be](https://github.com/100-hours-a-week/3-ellim-lee-community-be)                                       |
+| Backend Repository         | [wepick-be](https://github.com/W-Gain/wepick-be)                                       |
 
 ---
 
