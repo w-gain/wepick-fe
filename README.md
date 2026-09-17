@@ -6,7 +6,7 @@ WePick의 사용자 화면, 상호작용과 API 연동을 구현하는 저장소
 
 ## 현재 구현 상태
 
-React SPA 기반, 빈 화면 route, 디자인 토큰과 정적 빌드 구성이 `dev`에 반영됐습니다. Express·바닐라 JavaScript MPA와 기존 게시판 화면은 제거했습니다. 실제 화면, mock과 API 연동은 후속 PR에서 추가합니다.
+React SPA 기반, 빈 화면 route, 디자인 토큰과 정적 빌드 구성이 `dev`에 반영됐습니다. Express·바닐라 JavaScript MPA와 기존 게시판 화면은 제거했습니다. 화면 데이터 계약, 개발 전용 mock과 공통 UI를 기반으로 실제 화면을 구현합니다.
 
 ## 기술 구성
 
@@ -32,11 +32,20 @@ npm run dev
 
 Vite 개발 서버는 `/api` 요청에서 prefix를 제거해 `http://localhost:8080`으로 전달합니다. `/uploads`도 같은 BE 개발 서버로 전달합니다.
 
+백엔드 없이 화면을 개발할 때는 명시적으로 mock 모드를 실행합니다.
+
+```bash
+npm run dev:mock
+```
+
+mock 요청은 최종 API와 구분되는 `/api/__mock/*`만 가로챕니다. `?scenario=empty`, `?scenario=error`, `?scenario=after-vote`로 대표 상태를 확인할 수 있습니다. 실제 API 실패를 mock 데이터로 대체하지 않으며, `VITE_DATA_MODE=mock`인 운영 빌드는 실패합니다. 개발 중 공통 UI는 `/__ui`에서 확인할 수 있고 운영 빌드에는 이 route가 포함되지 않습니다.
+
 ## 명령
 
 | 명령                   | 역할                         |
 | ---------------------- | ---------------------------- |
 | `npm run dev`          | Vite 개발 서버               |
+| `npm run dev:mock`     | 개발 전용 Mock 서버와 Vite   |
 | `npm run typecheck`    | TypeScript 검사              |
 | `npm run lint`         | ESLint 검사                  |
 | `npm run format:check` | Prettier 검사                |
