@@ -22,5 +22,7 @@ describe('application routes', () => {
     expect(
       await screen.findByRole('heading', { name: '화면을 찾을 수 없어요' }),
     ).toBeInTheDocument();
+    expect(document.querySelector('.app-shell')).not.toBeInTheDocument();
+    expect(document.querySelector('.route-status__content')).toBeInTheDocument();
   });
 });

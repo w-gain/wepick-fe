@@ -117,6 +117,17 @@ select {
   padding: calc(40px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom));
 }
 
+.route-status {
+  width: 100%;
+  background: var(--wp-bg-canvas);
+}
+
+.route-status__content {
+  width: min(100%, 360px);
+  margin: 0 auto;
+  text-align: center;
+}
+
 .route-placeholder__screen-id,
 .route-status__eyebrow {
   margin: 0 0 8px;
@@ -142,7 +153,9 @@ select {
 }
 
 .route-status__link {
-  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 44px;
   margin-top: 24px;
   color: var(--wp-brand-primary);
