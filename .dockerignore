@@ -1,0 +1,11 @@
+.git
+.github
+.agents
+coverage
+dist
+node_modules
+public
+routes
+tests
+app.js
+README.md

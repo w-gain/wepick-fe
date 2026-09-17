@@ -1,523 +1,68 @@
 # WePick Frontend
 
-## 저장소 역할과 제품 설계
+WePick의 사용자 화면, 상호작용과 API 연동을 구현하는 저장소입니다.
 
-이 저장소는 **화면 구현·상호작용·컴포넌트**를 관리합니다. 제품·정책·ERD·화면 정의서·와이어프레임·공통 API 설계의 기준은 [wepick-product](https://github.com/W-Gain/wepick-product)입니다. [문서 관리 규칙](https://github.com/W-Gain/wepick-product/blob/main/docs/working/repository-and-document-guide.md)을 따르며 설계 원본을 복사하지 않습니다.
+제품·정책·화면 정의·디자인 원본과 공통 API 설계는 [wepick-product](https://github.com/W-Gain/wepick-product)가 관리합니다. 구현할 때 [프런트엔드 기술 스택 결정](https://github.com/W-Gain/wepick-product/blob/main/docs/decisions/0002-frontend-technology-stack.md)과 [마이그레이션 계획](https://github.com/W-Gain/wepick-product/blob/main/docs/working/frontend-migration-plan.md)을 따릅니다.
 
-아래 구현 설명은 기존 구현에 관한 기록이며 최신 제품 요구사항을 대신하지 않습니다. 현재 동작은 코드·검증 결과로 확인하고, 목표와의 차이는 [Product 전환 작업](https://github.com/W-Gain/wepick-product/blob/main/docs/working/documentation-backlog.md)에 연결합니다.
+## 현재 전환 상태
 
-![header_banner](./assets/imgs/header_banner.png)
+`feature/fe-app-foundation`에서 Express·바닐라 JavaScript MPA를 React SPA로 전환하고 있습니다. 현재 단계는 앱 기반, 빈 화면 route, 디자인 토큰과 정적 빌드 구성입니다. 실제 화면, mock과 API 연동은 후속 PR에서 추가합니다.
 
-> 매일 새로운 A/B 투표와 커뮤니티 기능을 제공하는 프론트엔드 웹 애플리케이션
+## 기술 구성
 
-![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
-![Express](https://img.shields.io/badge/Express_5.1-000000?style=flat-square&logo=express&logoColor=white)
-![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
-![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+| 역할          | 도구                                |
+| ------------- | ----------------------------------- |
+| UI            | React, TypeScript                   |
+| 빌드          | Vite                                |
+| 라우팅        | React Router Data Mode              |
+| 서버 상태     | TanStack Query                      |
+| API 계약 검증 | Zod                                 |
+| 스타일        | Tailwind CSS, CSS custom properties |
+| 테스트        | Vitest, React Testing Library       |
+| 운영 서빙     | Caddy가 Vite `dist/` 직접 제공      |
 
----
+기존 `public`, `routes`, `app.js`는 전환 중 참고를 위해 남아 있지만 Vite 빌드와 운영 이미지에는 포함되지 않습니다. 새 앱은 `src`만 사용합니다.
 
-## 목차
+## 로컬 실행
 
-1. [Project Introduction](#1-project-introduction)
-2. [Frontend Architecture](#2-frontend-architecture)
-3. [Internal Logic & Design System](#3-internal-logic--design-system)
-4. [Key Technical Challenges](#4-key-technical-challenges)
-5. [Documentation](#5-documentation)
+Node.js 24.15 이상과 npm을 사용합니다.
 
----
-
-## API and image upload contract
-
-Frontend API requests use the same origin prefix below. Caddy removes `/api` before proxying to the backend.
-
-```js
-API_BASE_URL: "/api"
+```bash
+npm ci
+npm run dev
 ```
 
-Images are uploaded to the backend as `multipart/form-data`; the browser does not call S3 directly.
+Vite 개발 서버는 `/api` 요청에서 prefix를 제거해 `http://localhost:8080`으로 전달합니다. `/uploads`도 같은 BE 개발 서버로 전달합니다.
 
-```text
-POST /api/images/profile  → file
-POST /api/images/posts    → files (maximum 5)
-GET  /uploads/...         → Caddy serves the shared upload volume
+## 명령
+
+| 명령                   | 역할                         |
+| ---------------------- | ---------------------------- |
+| `npm run dev`          | Vite 개발 서버               |
+| `npm run typecheck`    | TypeScript 검사              |
+| `npm run lint`         | ESLint 검사                  |
+| `npm run format:check` | Prettier 검사                |
+| `npm test`             | Vitest 한 번 실행            |
+| `npm run build`        | 타입 검사 후 `dist/` 생성    |
+| `npm run preview`      | 생성된 `dist/` 로컬 미리보기 |
+
+## 화면 route
+
+| URL              | 화면 ID                |
+| ---------------- | ---------------------- |
+| `/`              | `SCR-001` 오늘의 Pick  |
+| `/picks`         | `SCR-002` 지난 Pick    |
+| `/picks/:pickId` | `SCR-003` Pick 상세    |
+| `/history`       | `SCR-004` 내 투표 기록 |
+| `/profile`       | `SCR-005` 프로필       |
+| `/profile/edit`  | `SCR-006` 프로필 편집  |
+
+## 운영 이미지
+
+다단계 Docker build가 Node 단계에서 Vite `dist/`를 만들고 최종 Caddy 이미지의 `/srv/frontend`에 복사합니다. 운영 컨테이너에는 Express 애플리케이션을 실행하지 않습니다.
+
+```bash
+docker build -f docker/prod/dockerfile -t wepick-fe .
 ```
 
-## 1. Project Introduction
-
-### What is WePick?
-
-**WePick**은 매일 하나의 양자택일(A/B) 투표 주제를 제공하고, 사용자들이 커뮤니티에서 의견을 나눌 수 있는 플랫폼의 프론트엔드 애플리케이션입니다.
-
-### Core Values
-
-| Value             | Description                                                           |
-| ----------------- | --------------------------------------------------------------------- |
-| **Intuitive UX**  | 페이지 새로고침 없는 동적 UI 전환으로 자연스러운 사용자 경험 제공     |
-| **Mobile First**  | 모바일 최적화된 반응형 디자인과 터치 친화적 인터페이스                |
-| **Fast Response** | Intersection Observer 기반 무한 스크롤과 스켈레톤 UI로 체감 속도 개선 |
-
-### Key Features
-
-```
-[Vote]      오늘의 토픽 조회 → A/B 선택 → 투표 → 실시간 결과 확인 (페이지 이동 없이)
-[Post]      게시글 CRUD → 댓글 → 좋아요 → 무한 스크롤 페이지네이션
-[Auth]      회원가입 → 로그인(HTTP-only Cookie) → 프로필 관리
-[Image]     Backend multipart 업로드 → Local volume 저장 → /uploads 정적 제공
-```
-
-### Screenshots
-
-|                 Landing Page                 |              Today's Vote               |                    Community                     |
-| :------------------------------------------: | :-------------------------------------: | :----------------------------------------------: |
-| ![Landing](./assets/readme/imgs/landing.png) | ![Vote](./assets/readme/imgs/today.png) | ![Community](./assets/readme/imgs/community.png) |
-
----
-
-## 2. Frontend Architecture
-
-### System Overview
-
-**_(작성 예정)_**
-
-### Architecture Components
-
-| Component          | Technology                 | Purpose                            |
-| ------------------ | -------------------------- | ---------------------------------- |
-| **Runtime**        | Express 5.1                | HTML 페이지 제공 (MPA View Router) |
-| **JavaScript**     | ES6 Modules                | 클라이언트 사이드 로직, API 연동   |
-| **Styling**        | Custom CSS + Bootstrap 5.3 | 디자인 토큰 기반 스타일링          |
-| **Authentication** | HTTP-only Cookie           | 보안 토큰 관리 (서버 자동 처리)    |
-| **Image Upload**   | Backend multipart API      | Local volume 저장, Caddy 정적 제공 |
-
-### CI/CD Pipeline
-
-```mermaid
-flowchart LR
-    subgraph "Development"
-        A[Local Dev] -->|push| B[dev branch]
-        G[Local Dev] -->|push| H[main branch]
-    end
-
-    subgraph "GitHub Actions - Dev"
-        B -->|trigger| C[dev-ci.yml]
-        C -->|build & test| D[Docker Image]
-        D -->|push to ECR| E[dev-cd.yml]
-        E -->|deploy| F[Dev EC2]
-    end
-
-    subgraph "GitHub Actions - Prod"
-        H -->|trigger| I[prod-ci.yml]
-        I -->|build & test| J[Docker Image]
-        J -->|push to ECR| K[prod-cd.yml]
-        K -->|deploy| L[Prod EC2]
-    end
-```
-
-| Branch | Workflow                      | Target                     |
-| ------ | ----------------------------- | -------------------------- |
-| `dev`  | `dev-ci.yml` → `dev-cd.yml`   | Development 환경 자동 배포 |
-| `main` | `prod-ci.yml` → `prod-cd.yml` | Production 환경 자동 배포  |
-
----
-
-## 3. Internal Logic & Design System
-
-### Architecture Style: Feature-Based MPA
-
-단일 페이지 앱(SPA)이 아닌 **Multi-Page Application** 구조를 채택했습니다. 각 기능(Feature)별로 독립적인 HTML/JS/CSS를 가지며, 공유 모듈을 통해 일관성을 유지합니다.
-
-```
-public/
-├── features/                    # Feature-Based 구조
-│   ├── posts/                   # 커뮤니티 (게시판)
-│   │   ├── pages/               # HTML 페이지
-│   │   ├── scripts/             # JavaScript 모듈
-│   │   └── styles/              # CSS 스타일
-│   │
-│   ├── users/                   # 사용자 인증 & 관리
-│   │   ├── pages/
-│   │   ├── scripts/
-│   │   └── styles/
-│   │
-│   ├── wepick/                  # WePick 코어 (투표)
-│   │   ├── pages/
-│   │   ├── scripts/
-│   │   └── styles/
-│   │
-│   └── error/                   # 에러 페이지
-│
-├── shared/                      # 공유 모듈
-│   ├── api/                     # API 통신 모듈
-│   │   ├── base.js              # HTTP 요청 핸들러
-│   │   ├── users.js             # 사용자 API
-│   │   ├── posts.js             # 게시글 API
-│   │   ├── topics.js            # 투표 토픽 API
-│   │   └── images.js            # 이미지 업로드 API
-│   │
-│   ├── components/              # 공통 UI 컴포넌트
-│   │   ├── header.html/js       # 전역 헤더
-│   │   ├── footer.html/js       # 전역 푸터
-│   │   ├── loading.js           # 로딩 인디케이터
-│   │   ├── gauge-bar.js         # 투표 게이지 바
-│   │   └── toast.js             # 토스트 알림
-│   │
-│   ├── utils/                   # 유틸리티 함수
-│   │   ├── auth.js              # 인증 관리
-│   │   ├── validation.js        # 폼 유효성 검사
-│   │   ├── navigation.js        # 페이지 네비게이션
-│   │   ├── dom.js               # DOM 조작
-│   │   └── config.js            # 중앙 설정
-│   │
-│   └── styles/                  # 공통 스타일
-│       ├── custom.css           # 디자인 토큰
-│       └── header.css           # 헤더 스타일
-│
-routes/                          # Express View 라우터
-assets/                          # 정적 이미지/아이콘
-```
-
-### Design Philosophy
-
-#### 1. Centralized API Handler
-
-모든 API 요청은 `base.js`를 통해 일관되게 처리됩니다.
-
-```mermaid
-sequenceDiagram
-    participant Page as Page Script
-    participant API as API Module
-    participant Base as base.js
-    participant Loading as Loading Component
-    participant Backend as Backend API
-
-    Page->>API: PostsAPI.getList()
-    API->>Base: apiRequest('/posts')
-    Base->>Loading: show()
-    Base->>Backend: fetch (credentials: include)
-    Backend-->>Base: Response
-    Base->>Loading: hide()
-    Base-->>API: { data, error, status }
-    API-->>Page: Formatted Response
-```
-
-**Why?**
-
-- 중앙 집중식 에러 처리 (401, 403, 404, 500)
-- 자동 로딩 인디케이터 표시/숨김
-- HTTP-only 쿠키 자동 전송 (`credentials: 'include'`)
-- 일관된 응답 형식 반환
-
-#### 2. Action-Based Authentication
-
-페이지 진입 시 무조건 인증 체크를 하지 않고, **행위(Action) 기준**으로 로그인을 요구합니다.
-
-| 행위      | 인증 요구 시점      |
-| --------- | ------------------- |
-| 투표하기  | 투표 버튼 클릭 시   |
-| 글 작성   | 작성 버튼 클릭 시   |
-| 댓글 작성 | 댓글 제출 시        |
-| 좋아요    | 좋아요 버튼 클릭 시 |
-
-**Benefits:**
-
-- 비로그인 사용자도 콘텐츠 탐색 가능
-- 필요한 순간에만 로그인 유도
-- 더 나은 사용자 경험 제공
-
-#### 3. Design Token System
-
-CSS 변수를 통한 일관된 디자인 시스템을 적용했습니다.
-
-```css
-:root {
-  /* 색상 */
-  --bs-primary: #3b82f6;
-  --bs-body-color: #1f2937;
-  --color-text-muted: #9ca3af;
-
-  /* 폰트 크기 */
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-
-  /* 간격 */
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-
-  /* 테두리 */
-  --bs-border-radius: 8px;
-  --bs-border-radius-lg: 12px;
-
-  /* 애니메이션 */
-  --transition-fast: 0.15s ease;
-}
-```
-
----
-
-## 4. Key Technical Challenges
-
-### Challenge 1: Dynamic Vote UI Transition
-
-**Problem**: 투표 전/후 화면 전환 시 페이지 새로고침이 발생하면 사용자 경험이 끊김
-
-**Solution**: 같은 페이지(`/today`)에서 JavaScript로 UI 상태를 동적으로 전환
-
-```mermaid
-stateDiagram-v2
-    [*] --> LoadPage: /today 접속
-    LoadPage --> CheckVoted: API 응답 확인
-
-    CheckVoted --> VoteUI: votedOptionId === null
-    CheckVoted --> ResultUI: votedOptionId !== null
-
-    VoteUI --> SelectOption: 카드 클릭
-    SelectOption --> SubmitVote: 투표 버튼 클릭
-    SubmitVote --> CheckLogin: 로그인 확인
-
-    CheckLogin --> Redirect: 비로그인
-    CheckLogin --> CallAPI: 로그인됨
-
-    CallAPI --> ResultUI: 투표 성공
-    ResultUI --> [*]
-```
-
-| 구분        | Before               | After                  |
-| ----------- | -------------------- | ---------------------- |
-| 화면 전환   | 페이지 리다이렉트    | DOM 조작으로 즉시 전환 |
-| 체감 속도   | ~500ms (페이지 로드) | ~50ms (UI 전환)        |
-| 사용자 경험 | 화면 깜빡임 발생     | 자연스러운 애니메이션  |
-
-**Benefits:**
-
-- 페이지 새로고침 없이 즉각적인 피드백
-- 게이지 바 애니메이션으로 결과 시각화
-- 로그아웃 시에도 투표 UI로 자동 전환
-
----
-
-### Challenge 2: Infinite Scroll with Performance Optimization
-
-**Problem**: 게시글 목록에서 전통적인 페이지네이션은 모바일 UX에 적합하지 않음
-
-**Solution**: Intersection Observer + 커서 기반 페이지네이션 + 스켈레톤 UI
-
-```mermaid
-flowchart TD
-    A[페이지 로드] --> B[초기 데이터 로드]
-    B --> C[게시글 렌더링]
-    C --> D[Intersection Observer 설정]
-
-    D --> E{스크롤 트리거<br/>화면 진입?}
-    E -->|No| E
-    E -->|Yes| F{hasNext &&<br/>!isLoading?}
-
-    F -->|No| G[대기]
-    F -->|Yes| H[스켈레톤 UI 표시]
-    H --> I[API 호출<br/>lastPostId 기반]
-    I --> J[새 게시글 추가]
-    J --> K[상태 업데이트]
-    K --> E
-
-    G --> E
-```
-
-**Implementation Details:**
-
-```javascript
-// Intersection Observer 설정
-const observer = new IntersectionObserver(
-  (entries) => {
-    if (entry.isIntersecting && state.hasNext && !state.isLoading) {
-      loadPosts();
-    }
-  },
-  { rootMargin: "200px", threshold: 0.1 }
-);
-```
-
-| 기법                   | 효과                                    |
-| ---------------------- | --------------------------------------- |
-| `rootMargin: "200px"`  | 화면 하단 200px 전에 미리 로딩 시작     |
-| 커서 기반 페이지네이션 | 중복/누락 없는 일관된 데이터 로드       |
-| 스켈레톤 UI            | 로딩 중에도 레이아웃 유지 (CLS 방지)    |
-| `DocumentFragment`     | 다수 DOM 노드 일괄 추가로 렌더링 최적화 |
-
-**Benefits:**
-
-- 끊김 없는 스크롤 경험
-- 체감 로딩 시간 단축
-- Cumulative Layout Shift(CLS) 점수 개선
-
----
-
-### Challenge 3: Nested Loading Indicator Management
-
-**Problem**: 여러 API 호출이 동시에 발생할 때 로딩 인디케이터가 예상보다 빨리 사라지는 문제
-
-**Solution**: 카운터 기반 중첩 로딩 상태 관리
-
-```mermaid
-sequenceDiagram
-    participant A as API Call A
-    participant B as API Call B
-    participant L as Loading Component
-    participant Counter as loadingCounter
-
-    A->>L: show()
-    L->>Counter: counter++ (1)
-    Note right of L: 로딩 표시
-
-    B->>L: show()
-    L->>Counter: counter++ (2)
-    Note right of L: 이미 표시 중
-
-    A->>L: hide()
-    L->>Counter: counter-- (1)
-    Note right of L: 아직 숨기지 않음
-
-    B->>L: hide()
-    L->>Counter: counter-- (0)
-    Note right of L: 로딩 숨김
-```
-
-**Implementation:**
-
-```javascript
-let loadingCounter = 0;
-
-function show() {
-  loadingCounter++;
-  if (loadingCounter === 1) {
-    // DOM에 로딩 오버레이 추가
-  }
-}
-
-function hide() {
-  loadingCounter = Math.max(0, loadingCounter - 1);
-  if (loadingCounter === 0) {
-    // DOM에서 로딩 오버레이 제거
-  }
-}
-```
-
-| 상황   | 카운터 값 | 로딩 상태 |
-| ------ | --------- | --------- |
-| A 시작 | 1         | 표시      |
-| B 시작 | 2         | 유지      |
-| A 종료 | 1         | 유지      |
-| B 종료 | 0         | 숨김      |
-
-**Benefits:**
-
-- 병렬 API 호출 시 안정적인 로딩 상태 관리
-- 사용자에게 일관된 로딩 피드백 제공
-- `reset()` 함수로 비정상 상황 복구 가능
-
----
-
-### Challenge 4: Safe Navigation with Circular Reference Prevention
-
-**Problem**: 로그인/회원가입 페이지 간 뒤로가기 시 순환 이동 발생
-
-**Solution**: SessionStorage 기반 히스토리 추적 + 순환 경로 필터링
-
-```mermaid
-flowchart TD
-    A[뒤로가기 클릭] --> B[현재 페이지 히스토리에서 제거]
-    B --> C{히스토리에<br/>유효한 페이지?}
-
-    C -->|Yes| D{순환 경로인가?<br/>/signin, /signup}
-    C -->|No| E[홈으로 이동]
-
-    D -->|Yes| F[해당 페이지 스킵]
-    D -->|No| G[해당 페이지로 이동]
-
-    F --> C
-```
-
-**Implementation:**
-
-```javascript
-const CIRCULAR_PATHS = ["/users/signin", "/users/signup"];
-
-function goBack() {
-  const history = getHistory();
-
-  while (history.length > 0) {
-    const prevPath = history.pop();
-
-    // 순환 경로가 아닌 유효한 페이지 찾기
-    if (!isCircularPath(prevPath)) {
-      window.location.href = prevPath;
-      return;
-    }
-  }
-
-  // 유효한 이전 페이지 없으면 홈으로
-  window.location.href = config.ROUTES.HOME;
-}
-```
-
-| 히스토리              | 현재 위치       | 뒤로가기 결과          |
-| --------------------- | --------------- | ---------------------- |
-| `/posts` → `/signin`  | `/signup`       | `/posts` (로그인 스킵) |
-| `/signin`             | `/signup`       | `/` (홈으로)           |
-| `/posts` → `/posts/1` | `/posts/create` | `/posts/1`             |
-
-**Benefits:**
-
-- 로그인/회원가입 순환 이동 방지
-- 최대 20개 히스토리 유지 (메모리 효율)
-- 비정상 히스토리 시 안전하게 홈으로 이동
-
----
-
-## 5. Documentation
-
-### Project Documents
-
-| 문서 | 위치 |
-| --- | --- |
-| 제품·정책·화면 설계 | [Product](https://github.com/W-Gain/wepick-product) |
-| 내부 구조·구현 설명 | [Frontend Architecture](#2-frontend-architecture), [Internal Logic](#3-internal-logic--design-system) |
-| 공유 컴포넌트 | [Components](public/shared/components/README.md) |
-| 개발 작업 지침 | [AGENTS.md](AGENTS.md) |
-
-### External Resources
-
-아래 API Sheets·ERDCloud는 출처를 보존한 기존 외부 참조입니다. 접근 가능 여부·내용·최신성은 미확인으로, 현재 설계 기준은 Product를 따릅니다.
-
-| Resource                   | Link                                                                                                                           |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| API 명세서 (Google Sheets) | [Link](https://docs.google.com/spreadsheets/d/14p7ppmWjfA4FWeHc4dvRo8pL8MjHQtqkd7Q5522O754/edit?gid=1878554884#gid=1878554884) |
-| ERD 다이어그램             | [ERDCloud](https://www.erdcloud.com/d/w4FDHBTdYa74Jp4vn)                                                                       |
-| Backend Repository         | [wepick-be](https://github.com/W-Gain/wepick-be)                                       |
-
----
-
-## Tech Stack
-
-| Category     | Technology     | Version |
-| ------------ | -------------- | ------- |
-| Language     | JavaScript     | ES6+    |
-| Runtime      | Node.js        | -       |
-| Framework    | Express        | 5.1.0   |
-| UI Framework | Bootstrap      | 5.3.8   |
-| Testing      | Jest           | 30.2.0  |
-| Build        | Docker         | -       |
-| CI/CD        | GitHub Actions | -       |
-
----
-
-## Branch Strategy
-
-| Branch      | Purpose           |
-| ----------- | ----------------- |
-| `main`      | Production 릴리스 |
-| `dev`       | Development 통합  |
-| `feature/*` | 기능 개발         |
-| `docs/*`    | 문서 작업         |
+최종 운영에서는 Infra의 Caddyfile을 이미지에 읽기 전용으로 마운트해 80/443에서 정적 파일, `/api` 프록시와 `/uploads`를 함께 제공합니다. Infra 전환 전에는 현재 운영 Compose에 이 이미지를 배포하지 않습니다.
