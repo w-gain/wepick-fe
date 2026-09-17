@@ -4,9 +4,9 @@ WePick의 사용자 화면, 상호작용과 API 연동을 구현하는 저장소
 
 제품·정책·화면 정의·디자인 원본과 공통 API 설계는 [wepick-product](https://github.com/W-Gain/wepick-product)가 관리합니다. 구현할 때 [프런트엔드 기술 스택 결정](https://github.com/W-Gain/wepick-product/blob/main/docs/decisions/0002-frontend-technology-stack.md)과 [마이그레이션 계획](https://github.com/W-Gain/wepick-product/blob/main/docs/working/frontend-migration-plan.md)을 따릅니다.
 
-## 현재 전환 상태
+## 현재 구현 상태
 
-`feature/fe-app-foundation`에서 Express·바닐라 JavaScript MPA를 React SPA로 전환하고 있습니다. 현재 단계는 앱 기반, 빈 화면 route, 디자인 토큰과 정적 빌드 구성입니다. 실제 화면, mock과 API 연동은 후속 PR에서 추가합니다.
+React SPA 기반, 빈 화면 route, 디자인 토큰과 정적 빌드 구성이 `dev`에 반영됐습니다. Express·바닐라 JavaScript MPA와 기존 게시판 화면은 제거했습니다. 실제 화면, mock과 API 연동은 후속 PR에서 추가합니다.
 
 ## 기술 구성
 
@@ -20,8 +20,6 @@ WePick의 사용자 화면, 상호작용과 API 연동을 구현하는 저장소
 | 스타일        | Tailwind CSS, CSS custom properties |
 | 테스트        | Vitest, React Testing Library       |
 | 운영 서빙     | Caddy가 Vite `dist/` 직접 제공      |
-
-기존 `public`, `routes`, `app.js`는 전환 중 참고를 위해 남아 있지만 Vite 빌드와 운영 이미지에는 포함되지 않습니다. 새 앱은 `src`만 사용합니다.
 
 ## 로컬 실행
 
