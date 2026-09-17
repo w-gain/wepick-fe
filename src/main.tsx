@@ -4,6 +4,8 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 
 import { router } from './app/router';
+import { enableMocking } from './app/enableMocking';
+import { ToastProvider } from './shared/ui';
 import './styles/global.css';
 
 const queryClient = new QueryClient({
@@ -25,10 +27,18 @@ if (!root) {
   throw new Error('React root element was not found.');
 }
 
-createRoot(root).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  </StrictMode>,
-);
+async function bootstrap() {
+  await enableMocking();
+
+  createRoot(root as HTMLElement).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <RouterProvider router={router} />
+        </ToastProvider>
+      </QueryClientProvider>
+    </StrictMode>,
+  );
+}
+
+void bootstrap();

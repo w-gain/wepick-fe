@@ -17,6 +17,15 @@ export const routes: RouteObject[] = [
       { path: 'profile/edit', lazy: () => import('../routes/ProfileEditRoute') },
     ],
   },
+  ...(import.meta.env.DEV
+    ? [
+        {
+          path: '/__ui',
+          lazy: () => import('../routes/UiGalleryRoute'),
+          errorElement: <RouteError />,
+        },
+      ]
+    : []),
 ];
 
 export const router = createBrowserRouter(routes);
