@@ -38,14 +38,15 @@ export const handlers = [
   http.get('*/api/__mock/picks/:pickId', ({ request, params }) => {
     if (scenario(request) === 'error') return failure();
     const isPastPick = params.pickId === 'pick-2026-09-16';
+    const beforeVote = scenario(request) === 'before-vote';
     return HttpResponse.json(
-      scenario(request) === 'after-vote'
+      beforeVote
         ? isPastPick
-          ? pastPickAfterVote
-          : todayPickAfterVote
-        : isPastPick
           ? pastPickBeforeVote
-          : todayPickBeforeVote,
+          : todayPickBeforeVote
+        : isPastPick
+          ? pastPickAfterVote
+          : todayPickAfterVote,
     );
   }),
   http.get('*/api/__mock/picks/:pickId/opinions', ({ request }) => {

@@ -66,7 +66,10 @@ export function useVote(pickId: string) {
         schema: pickSchema,
       }),
     onSuccess: (pick) => {
-      queryClient.setQueryData(['pick', pickId === 'pick-2026-09-17' ? 'today' : pickId], pick);
+      queryClient.setQueryData(['pick', pickId], pick);
+      if (pickId === 'pick-2026-09-17') {
+        queryClient.setQueryData(['pick', 'today'], pick);
+      }
     },
   });
 }
