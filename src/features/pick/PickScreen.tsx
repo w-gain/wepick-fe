@@ -4,10 +4,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import type { Choice, Opinion, Pick } from '../../shared/contracts';
 import {
   Button,
+  BackIcon,
   EmptyState,
   ErrorState,
   LoadingState,
   ResultBar,
+  MoonIcon,
+  ShareIcon,
   useToast,
   VoteChoice,
 } from '../../shared/ui';
@@ -30,7 +33,8 @@ function PickHeader({ detail }: { detail: boolean }) {
     <header className="pick-header">
       {detail ? (
         <button className="pick-header__back" type="button" onClick={() => navigate(-1)}>
-          <span aria-hidden="true">‹</span>
+          <BackIcon />
+          <span>Pick 상세</span>
           <span className="sr-only">뒤로가기</span>
         </button>
       ) : (
@@ -46,7 +50,7 @@ function PickHeader({ detail }: { detail: boolean }) {
             document.documentElement.dataset.theme = next;
           }}
         >
-          ◐
+          <MoonIcon />
         </button>
         <button
           className="pick-header__action"
@@ -62,7 +66,7 @@ function PickHeader({ detail }: { detail: boolean }) {
             }
           }}
         >
-          ↗
+          <ShareIcon />
         </button>
       </div>
       <span className="sr-only">{location.pathname}</span>
@@ -73,7 +77,7 @@ function PickHeader({ detail }: { detail: boolean }) {
 function PickMeta({ pick, detail }: { pick: Pick; detail: boolean }) {
   return (
     <div className="pick-meta">
-      <span className="pick-meta__category">{pick.category.label}</span>
+      <span className="pick-meta__category">취향·일상</span>
       <span>{detail ? '지난 Pick' : '오늘의 Pick'}</span>
       <time dateTime={pick.representativeDate}>{formatDate(pick.representativeDate)}</time>
     </div>
@@ -113,8 +117,16 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
 
   return (
     <section className="pick-results" aria-labelledby="pick-results-title">
-      <h2 id="pick-results-title">투표 결과</h2>
-      {pick.result && <ResultBar result={pick.result} selectedChoice={pick.userVote} />}
+      <h2 id="pick-results-title" className="sr-only">
+        투표 결과
+      </h2>
+      {pick.result && (
+        <ResultBar
+          result={pick.result}
+          selectedChoice={pick.userVote}
+          labels={{ A: pick.options[0].label, B: pick.options[1].label }}
+        />
+      )}
       <div className="representative-opinions">
         {(['A', 'B'] as const).map((choice) => {
           const opinion = pick.representativeOpinions[choice];
@@ -141,7 +153,10 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
       </Button>
       <div className="opinion-list">
         <div className="opinion-list__header">
-          <h3>전체 의견</h3>
+          <h3>서로의 이유</h3>
+          <span className="opinion-list__count">
+            {pick.result?.totalVotes.toLocaleString()}명 참여
+          </span>
           <div className="filter-tabs" role="tablist" aria-label="의견 필터">
             {(['all', 'A', 'B'] as const).map((item) => (
               <button
@@ -226,12 +241,13 @@ export function PickScreen({ pickId }: PickScreenProps) {
 
   return (
     <section className="pick-screen" aria-labelledby="pick-question">
+      <div className="mobile-status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <span>▴ ◔ ▣</span>
+      </div>
       <PickHeader detail={detail} />
       <PickMeta pick={pick} detail={detail} />
       <div className="pick-screen__question">
-        <p className="pick-screen__eyebrow">
-          {voted ? '내 선택과 결과' : selectedChoice ? '선택을 확인해 주세요' : '하나를 골라주세요'}
-        </p>
         <h1 id="pick-question">{pick.question}</h1>
       </div>
       {!voted ? (
