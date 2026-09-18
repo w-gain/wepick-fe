@@ -45,11 +45,6 @@ export function LoginRequiredSheet({ open, actionLabel, onOpenChange }: LoginReq
           <Button disabled={loginStarted} onClick={startLogin}>
             {loginStarted ? '로그인 준비 중…' : '카카오로 계속하기'}
           </Button>
-          {loginStarted && (
-            <p className="sheet-content__inline-status" role="status">
-              카카오 로그인은 다음 단계에서 연결돼요.
-            </p>
-          )}
           <Dialog.Close asChild>
             <Button variant="ghost">취소</Button>
           </Dialog.Close>

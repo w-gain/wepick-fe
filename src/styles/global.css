@@ -898,6 +898,7 @@ select {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  padding-top: 4px;
   margin-bottom: 18px;
 }
 .sheet-content h2,
@@ -913,11 +914,11 @@ select {
   font-size: 14px;
   line-height: 20px;
 }
-.sheet-content__inline-status {
-  margin: 8px 0 0 !important;
-  color: var(--wp-text-secondary) !important;
-  font-size: 12px !important;
-  text-align: center;
+.sheet-content__header > .icon-button {
+  width: 44px;
+  height: 44px;
+  margin: -6px -4px 0 0;
+  border-radius: 50%;
 }
 .icon-button {
   display: grid;
