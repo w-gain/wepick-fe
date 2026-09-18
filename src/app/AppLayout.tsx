@@ -5,7 +5,7 @@ import { BottomNav } from '../shared/ui';
 
 export function AppLayout() {
   const location = useLocation();
-  const isDetail = location.pathname.startsWith('/picks/');
+  const isDetail = location.pathname.startsWith('/picks/') || location.pathname === '/profile/edit';
 
   return (
     <div className="app-viewport">
