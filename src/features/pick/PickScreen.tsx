@@ -14,6 +14,7 @@ import {
   useToast,
   VoteChoice,
 } from '../../shared/ui';
+import { LoginRequiredSheet } from '../auth/LoginRequiredSheet';
 import { useOpinions, usePick, useVote } from './api';
 
 type PickScreenProps = { pickId?: string };
@@ -109,8 +110,8 @@ function OpinionCard({ opinion, onLike }: { opinion: Opinion; onLike?: () => voi
 
 function ResultAndOpinions({ pick }: { pick: Pick }) {
   const opinionsQuery = useOpinions(pick.id, Boolean(pick.result));
-  const { notify } = useToast();
   const [filter, setFilter] = useState<'all' | Choice>('all');
+  const [loginOpen, setLoginOpen] = useState(false);
   const opinions = opinionsQuery.data?.items ?? [];
   const filteredOpinions =
     filter === 'all' ? opinions : opinions.filter((opinion) => opinion.choice === filter);
@@ -131,11 +132,7 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
         {(['A', 'B'] as const).map((choice) => {
           const opinion = pick.representativeOpinions[choice];
           return opinion ? (
-            <OpinionCard
-              key={choice}
-              opinion={opinion}
-              onLike={() => notify({ tone: 'info', title: '현재 지원하지 않는 기능이에요.' })}
-            />
+            <OpinionCard key={choice} opinion={opinion} onLike={() => setLoginOpen(true)} />
           ) : (
             <div className="representative-opinions__empty" key={choice}>
               <span className={`choice-label choice-label--${choice.toLowerCase()}`}>{choice}</span>
@@ -147,7 +144,7 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
       <Button
         variant="secondary"
         className="pick-results__opinion-button"
-        onClick={() => notify({ tone: 'info', title: '현재 지원하지 않는 기능이에요.' })}
+        onClick={() => setLoginOpen(true)}
       >
         의견 남기기
       </Button>
@@ -183,13 +180,14 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
           <EmptyState title="아직 의견이 없어요" description="첫 의견을 남겨보세요." />
         )}
         {filteredOpinions.map((opinion) => (
-          <OpinionCard
-            key={opinion.id}
-            opinion={opinion}
-            onLike={() => notify({ tone: 'info', title: '현재 지원하지 않는 기능이에요.' })}
-          />
+          <OpinionCard key={opinion.id} opinion={opinion} onLike={() => setLoginOpen(true)} />
         ))}
       </div>
+      <LoginRequiredSheet
+        open={loginOpen}
+        actionLabel="의견 남기기와 공감"
+        onOpenChange={setLoginOpen}
+      />
     </section>
   );
 }
