@@ -77,13 +77,13 @@ export function PastPicksScreen() {
           onRetry={() => query.refetch()}
         />
       )}
-      {query.data && query.data.items.length === 0 && (
+      {!query.isError && query.data && query.data.items.length === 0 && (
         <EmptyState
           title="아직 지난 Pick이 없어요"
           description="오늘의 Pick에서 먼저 참여해 보세요."
         />
       )}
-      {query.data && query.data.items.length > 0 && (
+      {!query.isError && query.data && query.data.items.length > 0 && (
         <div className="past-pick-list" aria-label="지난 Pick 목록">
           {query.data.items.map((pick) => (
             <PastPickCard key={pick.id} pick={pick} />
