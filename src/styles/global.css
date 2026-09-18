@@ -134,6 +134,105 @@ select {
   min-height: 100dvh;
   padding: 0 18px calc(86px + env(safe-area-inset-bottom));
 }
+.past-picks-screen {
+  min-height: 100dvh;
+  padding: 0 18px calc(86px + env(safe-area-inset-bottom));
+}
+.past-picks-header {
+  margin-bottom: 32px;
+}
+.past-picks-intro {
+  margin-bottom: 24px;
+}
+.past-picks-intro h1 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.3;
+  letter-spacing: -0.04em;
+}
+.past-picks-intro p {
+  margin: 14px 0 0;
+  color: var(--wp-text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.past-pick-list {
+  display: grid;
+  gap: 12px;
+}
+.past-pick-card {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 104px;
+  padding: 12px 14px;
+  border: 1px solid var(--wp-border-default);
+  border-radius: 18px;
+  background: var(--wp-bg-surface);
+  color: var(--wp-text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+.past-pick-card:hover {
+  border-color: var(--wp-brand-primary);
+}
+.past-pick-card__badge {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--wp-brand-primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+.past-pick-card__badge--a {
+  background: var(--wp-choice-a);
+}
+.past-pick-card__badge--b {
+  background: var(--wp-choice-b);
+}
+.past-pick-card__body {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+.past-pick-card__meta {
+  color: var(--wp-text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+}
+.past-pick-card__body strong {
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.42;
+  letter-spacing: -0.03em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.past-pick-card__status {
+  color: var(--wp-text-secondary);
+  font-size: 10px;
+  font-weight: 700;
+}
+.past-pick-card__status.is-voted {
+  color: var(--wp-brand-primary);
+}
+.past-pick-card__arrow {
+  color: var(--wp-text-secondary);
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1;
+}
+.past-pick-list__end {
+  margin: 8px 0 0;
+  color: var(--wp-text-tertiary);
+  font-size: 12px;
+  text-align: center;
+}
 .mobile-status-bar {
   display: flex;
   align-items: center;

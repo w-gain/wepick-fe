@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { dataMode } from '../../app/enableMocking';
-import type { Choice, OpinionList, Pick } from '../../shared/contracts';
-import { opinionListSchema, pickSchema } from '../../shared/contracts';
+import type { Choice, OpinionList, Pick, PickList } from '../../shared/contracts';
+import { opinionListSchema, pickListSchema, pickSchema } from '../../shared/contracts';
 import { apiRequest } from '../../shared/api/client';
 
 const useMockApi = dataMode === 'mock' || import.meta.env.MODE === 'test';
@@ -10,6 +10,21 @@ const useMockApi = dataMode === 'mock' || import.meta.env.MODE === 'test';
 function pickPath(pickId?: string) {
   if (useMockApi) return pickId ? `/__mock/picks/${pickId}` : '/__mock/picks/today';
   return pickId ? `/picks/${pickId}` : '/picks/today';
+}
+
+function picksPath() {
+  return useMockApi ? '/__mock/picks' : '/picks';
+}
+
+export function usePastPicks() {
+  return useQuery({
+    queryKey: ['picks'],
+    queryFn: () =>
+      apiRequest<PickList>(picksPath(), {
+        method: 'GET',
+        schema: pickListSchema,
+      }),
+  });
 }
 
 function opinionsPath(pickId: string) {
