@@ -924,7 +924,9 @@ select {
   height: 44px;
   margin: -6px 0 0;
   border-radius: 12px;
-  background: var(--wp-bg-subtle);
+}
+.sheet-content__description-line {
+  display: block;
 }
 .icon-button {
   display: grid;

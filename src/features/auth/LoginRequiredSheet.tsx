@@ -35,7 +35,12 @@ export function LoginRequiredSheet({ open, actionLabel, onOpenChange }: LoginReq
             <div className="sheet-content__header-copy">
               <Dialog.Title>로그인이 필요해요</Dialog.Title>
               <Dialog.Description id="login-required-description">
-                {actionLabel}은 로그인 후 이용할 수 있어요. 로그인하면 지금 화면으로 돌아와요.
+                <span className="sheet-content__description-line">
+                  {actionLabel}은 로그인 후 이용할 수 있어요.
+                </span>
+                <span className="sheet-content__description-line">
+                  로그인하면 지금 화면으로 돌아와요.
+                </span>
               </Dialog.Description>
             </div>
             <Dialog.Close className="icon-button" aria-label="닫기">

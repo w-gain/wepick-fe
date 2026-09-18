@@ -183,11 +183,7 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
           <OpinionCard key={opinion.id} opinion={opinion} onLike={() => setLoginOpen(true)} />
         ))}
       </div>
-      <LoginRequiredSheet
-        open={loginOpen}
-        actionLabel="의견 남기기와 공감"
-        onOpenChange={setLoginOpen}
-      />
+      <LoginRequiredSheet open={loginOpen} actionLabel="의견과 공감" onOpenChange={setLoginOpen} />
     </section>
   );
 }
