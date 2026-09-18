@@ -897,9 +897,13 @@ select {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   padding-top: 4px;
   margin-bottom: 18px;
+}
+.sheet-content__header-copy {
+  min-width: 0;
+  flex: 1;
 }
 .sheet-content h2,
 .confirm-dialog h2 {
@@ -917,7 +921,7 @@ select {
 .sheet-content__header > .icon-button {
   width: 44px;
   height: 44px;
-  margin: -6px -4px 0 0;
+  margin: -6px 0 0;
   border-radius: 12px;
 }
 .icon-button {
