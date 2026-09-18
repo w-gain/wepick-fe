@@ -1,8 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { dataMode } from '../../app/enableMocking';
-import type { Choice, OpinionList, Pick, PickList } from '../../shared/contracts';
-import { opinionListSchema, pickListSchema, pickSchema } from '../../shared/contracts';
+import type { Choice, OpinionList, Pick, PickList, VoteHistory } from '../../shared/contracts';
+import {
+  opinionListSchema,
+  pickListSchema,
+  pickSchema,
+  voteHistorySchema,
+} from '../../shared/contracts';
 import { apiRequest } from '../../shared/api/client';
 
 const useMockApi = dataMode === 'mock' || import.meta.env.MODE === 'test';
@@ -23,6 +28,17 @@ export function usePastPicks() {
       apiRequest<PickList>(picksPath(), {
         method: 'GET',
         schema: pickListSchema,
+      }),
+  });
+}
+
+export function useVoteHistory() {
+  return useQuery({
+    queryKey: ['vote-history'],
+    queryFn: () =>
+      apiRequest<VoteHistory>(useMockApi ? '/__mock/members/me/votes' : '/members/me/votes', {
+        method: 'GET',
+        schema: voteHistorySchema,
       }),
   });
 }
