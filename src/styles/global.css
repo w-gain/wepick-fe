@@ -134,6 +134,16 @@ select {
   min-height: 100dvh;
   padding: 0 18px calc(86px + env(safe-area-inset-bottom));
 }
+.pick-screen--state {
+  display: flex;
+  flex-direction: column;
+}
+.pick-state-content {
+  display: grid;
+  flex: 1;
+  align-items: center;
+  min-height: calc(100dvh - 104px);
+}
 .past-picks-screen {
   min-height: 100dvh;
   padding: 0 18px calc(86px + env(safe-area-inset-bottom));

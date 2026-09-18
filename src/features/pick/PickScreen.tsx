@@ -194,6 +194,19 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
   );
 }
 
+function PickStateShell({ detail, children }: { detail: boolean; children: React.ReactNode }) {
+  return (
+    <section className="pick-screen pick-screen--state">
+      <div className="mobile-status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <span>▴ ◔ ▣</span>
+      </div>
+      <PickHeader detail={detail} />
+      <div className="pick-state-content">{children}</div>
+    </section>
+  );
+}
+
 export function PickScreen({ pickId }: PickScreenProps) {
   const detail = Boolean(pickId);
   const query = usePick(pickId);
@@ -203,21 +216,19 @@ export function PickScreen({ pickId }: PickScreenProps) {
 
   if (query.isLoading)
     return (
-      <>
-        <PickHeader detail={detail} />
+      <PickStateShell detail={detail}>
         <LoadingState label="Pick을 불러오는 중이에요" />
-      </>
+      </PickStateShell>
     );
   if (query.isError || !query.data) {
     return (
-      <>
-        <PickHeader detail={detail} />
+      <PickStateShell detail={detail}>
         <ErrorState
           title="Pick을 불러오지 못했어요"
           description="잠시 후 다시 시도해 주세요."
           onRetry={() => query.refetch()}
         />
-      </>
+      </PickStateShell>
     );
   }
 
