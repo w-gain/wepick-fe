@@ -763,6 +763,10 @@ select {
   margin: 0;
   padding: 0;
   list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
 }
 .app-toast {
   display: grid;
