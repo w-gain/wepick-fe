@@ -66,6 +66,21 @@ export const todayPickAfterVote: Pick = {
   representativeOpinions: opinions,
 };
 
+export const pastPickBeforeVote: Pick = {
+  ...todayPickBeforeVote,
+  id: 'pick-2026-09-16',
+  question: '쉬는 날엔 집콕 vs 외출?',
+  representativeDate: '2026-09-16',
+};
+
+export const pastPickAfterVote: Pick = {
+  ...todayPickAfterVote,
+  ...pastPickBeforeVote,
+  userVote: 'B',
+  result: todayPickAfterVote.result,
+  representativeOpinions: todayPickAfterVote.representativeOpinions,
+};
+
 export const pastPicks: PickList = {
   items: [
     { ...basePick, userVote: 'A' },

@@ -4,6 +4,8 @@ import {
   emptyPickList,
   emptyVoteHistory,
   memberProfile,
+  pastPickAfterVote,
+  pastPickBeforeVote,
   pastPicks,
   todayPickAfterVote,
   todayPickBeforeVote,
@@ -33,9 +35,18 @@ export const handlers = [
     if (scenario(request) === 'error') return failure();
     return HttpResponse.json(scenario(request) === 'empty' ? emptyPickList : pastPicks);
   }),
-  http.get('*/api/__mock/picks/:pickId', ({ request }) => {
+  http.get('*/api/__mock/picks/:pickId', ({ request, params }) => {
     if (scenario(request) === 'error') return failure();
-    return HttpResponse.json(todayPickAfterVote);
+    const isPastPick = params.pickId === 'pick-2026-09-16';
+    return HttpResponse.json(
+      scenario(request) === 'after-vote'
+        ? isPastPick
+          ? pastPickAfterVote
+          : todayPickAfterVote
+        : isPastPick
+          ? pastPickBeforeVote
+          : todayPickBeforeVote,
+    );
   }),
   http.get('*/api/__mock/picks/:pickId/opinions', ({ request }) => {
     if (scenario(request) === 'error') return failure();
@@ -46,6 +57,12 @@ export const handlers = [
             items: Object.values(todayPickAfterVote.representativeOpinions).filter(Boolean),
             nextCursor: null,
           },
+    );
+  }),
+  http.post('*/api/__mock/picks/:pickId/votes', async ({ request, params }) => {
+    if (scenario(request) === 'error') return failure();
+    return HttpResponse.json(
+      params.pickId === 'pick-2026-09-16' ? pastPickAfterVote : todayPickAfterVote,
     );
   }),
   http.get('*/api/__mock/members/me', ({ request }) => {

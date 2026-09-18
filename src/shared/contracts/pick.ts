@@ -96,7 +96,13 @@ export const pickListSchema = z.object({
   nextCursor: z.string().nullable(),
 });
 
+export const opinionListSchema = z.object({
+  items: z.array(opinionSchema),
+  nextCursor: z.string().nullable(),
+});
+
 export type Pick = z.infer<typeof pickSchema>;
 export type VoteResult = z.infer<typeof voteResultSchema>;
 export type Opinion = z.infer<typeof opinionSchema>;
 export type PickList = z.infer<typeof pickListSchema>;
+export type OpinionList = z.infer<typeof opinionListSchema>;

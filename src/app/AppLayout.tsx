@@ -1,9 +1,12 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 
 import { dataMode } from './enableMocking';
 import { BottomNav } from '../shared/ui';
 
 export function AppLayout() {
+  const location = useLocation();
+  const isDetail = location.pathname.startsWith('/picks/');
+
   return (
     <div className="app-viewport">
       <main className="app-shell">
@@ -11,7 +14,7 @@ export function AppLayout() {
           <span className="mock-mode-badge">MOCK</span>
         )}
         <Outlet />
-        <BottomNav />
+        {!isDetail && <BottomNav />}
       </main>
     </div>
   );
