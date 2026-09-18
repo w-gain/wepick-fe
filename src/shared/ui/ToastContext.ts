@@ -2,7 +2,11 @@ import { createContext, useContext } from 'react';
 
 export type ToastTone = 'success' | 'info' | 'error' | 'loading';
 export type Notice = { id: number; title: string; description?: string; tone: ToastTone };
-export type ToastContextValue = { notify: (notice: Omit<Notice, 'id'>) => void };
+export type ToastContextValue = {
+  notify: (notice: Omit<Notice, 'id'>) => void;
+  clear: () => void;
+  setSuspended: (suspended: boolean) => void;
+};
 
 export const ToastContext = createContext<ToastContextValue | null>(null);
 

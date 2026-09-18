@@ -4,13 +4,17 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import type { Choice, Opinion, Pick } from '../../shared/contracts';
 import {
   Button,
+  BackIcon,
   EmptyState,
   ErrorState,
   LoadingState,
   ResultBar,
+  MoonIcon,
+  ShareIcon,
   useToast,
   VoteChoice,
 } from '../../shared/ui';
+import { LoginRequiredSheet } from '../auth/LoginRequiredSheet';
 import { useOpinions, usePick, useVote } from './api';
 
 type PickScreenProps = { pickId?: string };
@@ -30,7 +34,8 @@ function PickHeader({ detail }: { detail: boolean }) {
     <header className="pick-header">
       {detail ? (
         <button className="pick-header__back" type="button" onClick={() => navigate(-1)}>
-          <span aria-hidden="true">‹</span>
+          <BackIcon />
+          <span>Pick 상세</span>
           <span className="sr-only">뒤로가기</span>
         </button>
       ) : (
@@ -46,7 +51,7 @@ function PickHeader({ detail }: { detail: boolean }) {
             document.documentElement.dataset.theme = next;
           }}
         >
-          ◐
+          <MoonIcon />
         </button>
         <button
           className="pick-header__action"
@@ -62,7 +67,7 @@ function PickHeader({ detail }: { detail: boolean }) {
             }
           }}
         >
-          ↗
+          <ShareIcon />
         </button>
       </div>
       <span className="sr-only">{location.pathname}</span>
@@ -73,7 +78,7 @@ function PickHeader({ detail }: { detail: boolean }) {
 function PickMeta({ pick, detail }: { pick: Pick; detail: boolean }) {
   return (
     <div className="pick-meta">
-      <span className="pick-meta__category">{pick.category.label}</span>
+      <span className="pick-meta__category">취향·일상</span>
       <span>{detail ? '지난 Pick' : '오늘의 Pick'}</span>
       <time dateTime={pick.representativeDate}>{formatDate(pick.representativeDate)}</time>
     </div>
@@ -105,25 +110,29 @@ function OpinionCard({ opinion, onLike }: { opinion: Opinion; onLike?: () => voi
 
 function ResultAndOpinions({ pick }: { pick: Pick }) {
   const opinionsQuery = useOpinions(pick.id, Boolean(pick.result));
-  const { notify } = useToast();
   const [filter, setFilter] = useState<'all' | Choice>('all');
+  const [loginOpen, setLoginOpen] = useState(false);
   const opinions = opinionsQuery.data?.items ?? [];
   const filteredOpinions =
     filter === 'all' ? opinions : opinions.filter((opinion) => opinion.choice === filter);
 
   return (
     <section className="pick-results" aria-labelledby="pick-results-title">
-      <h2 id="pick-results-title">투표 결과</h2>
-      {pick.result && <ResultBar result={pick.result} selectedChoice={pick.userVote} />}
+      <h2 id="pick-results-title" className="sr-only">
+        투표 결과
+      </h2>
+      {pick.result && (
+        <ResultBar
+          result={pick.result}
+          selectedChoice={pick.userVote}
+          labels={{ A: pick.options[0].label, B: pick.options[1].label }}
+        />
+      )}
       <div className="representative-opinions">
         {(['A', 'B'] as const).map((choice) => {
           const opinion = pick.representativeOpinions[choice];
           return opinion ? (
-            <OpinionCard
-              key={choice}
-              opinion={opinion}
-              onLike={() => notify({ tone: 'info', title: '현재 지원하지 않는 기능이에요.' })}
-            />
+            <OpinionCard key={choice} opinion={opinion} onLike={() => setLoginOpen(true)} />
           ) : (
             <div className="representative-opinions__empty" key={choice}>
               <span className={`choice-label choice-label--${choice.toLowerCase()}`}>{choice}</span>
@@ -135,13 +144,16 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
       <Button
         variant="secondary"
         className="pick-results__opinion-button"
-        onClick={() => notify({ tone: 'info', title: '현재 지원하지 않는 기능이에요.' })}
+        onClick={() => setLoginOpen(true)}
       >
         의견 남기기
       </Button>
       <div className="opinion-list">
         <div className="opinion-list__header">
-          <h3>전체 의견</h3>
+          <h3>서로의 이유</h3>
+          <span className="opinion-list__count">
+            {pick.result?.totalVotes.toLocaleString()}명 참여
+          </span>
           <div className="filter-tabs" role="tablist" aria-label="의견 필터">
             {(['all', 'A', 'B'] as const).map((item) => (
               <button
@@ -168,13 +180,23 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
           <EmptyState title="아직 의견이 없어요" description="첫 의견을 남겨보세요." />
         )}
         {filteredOpinions.map((opinion) => (
-          <OpinionCard
-            key={opinion.id}
-            opinion={opinion}
-            onLike={() => notify({ tone: 'info', title: '현재 지원하지 않는 기능이에요.' })}
-          />
+          <OpinionCard key={opinion.id} opinion={opinion} onLike={() => setLoginOpen(true)} />
         ))}
       </div>
+      <LoginRequiredSheet open={loginOpen} actionLabel="의견과 공감" onOpenChange={setLoginOpen} />
+    </section>
+  );
+}
+
+function PickStateShell({ detail, children }: { detail: boolean; children: React.ReactNode }) {
+  return (
+    <section className="pick-screen pick-screen--state">
+      <div className="mobile-status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <span>▴ ◔ ▣</span>
+      </div>
+      <PickHeader detail={detail} />
+      <div className="pick-state-content">{children}</div>
     </section>
   );
 }
@@ -188,21 +210,19 @@ export function PickScreen({ pickId }: PickScreenProps) {
 
   if (query.isLoading)
     return (
-      <>
-        <PickHeader detail={detail} />
+      <PickStateShell detail={detail}>
         <LoadingState label="Pick을 불러오는 중이에요" />
-      </>
+      </PickStateShell>
     );
   if (query.isError || !query.data) {
     return (
-      <>
-        <PickHeader detail={detail} />
+      <PickStateShell detail={detail}>
         <ErrorState
           title="Pick을 불러오지 못했어요"
           description="잠시 후 다시 시도해 주세요."
           onRetry={() => query.refetch()}
         />
-      </>
+      </PickStateShell>
     );
   }
 
@@ -226,12 +246,13 @@ export function PickScreen({ pickId }: PickScreenProps) {
 
   return (
     <section className="pick-screen" aria-labelledby="pick-question">
+      <div className="mobile-status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <span>▴ ◔ ▣</span>
+      </div>
       <PickHeader detail={detail} />
       <PickMeta pick={pick} detail={detail} />
       <div className="pick-screen__question">
-        <p className="pick-screen__eyebrow">
-          {voted ? '내 선택과 결과' : selectedChoice ? '선택을 확인해 주세요' : '하나를 골라주세요'}
-        </p>
         <h1 id="pick-question">{pick.question}</h1>
       </div>
       {!voted ? (

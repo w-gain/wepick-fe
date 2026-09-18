@@ -1,8 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { dataMode } from '../../app/enableMocking';
-import type { Choice, OpinionList, Pick } from '../../shared/contracts';
-import { opinionListSchema, pickSchema } from '../../shared/contracts';
+import type { Choice, OpinionList, Pick, PickList, VoteHistory } from '../../shared/contracts';
+import {
+  opinionListSchema,
+  pickListSchema,
+  pickSchema,
+  voteHistorySchema,
+} from '../../shared/contracts';
 import { apiRequest } from '../../shared/api/client';
 
 const useMockApi = dataMode === 'mock' || import.meta.env.MODE === 'test';
@@ -10,6 +15,32 @@ const useMockApi = dataMode === 'mock' || import.meta.env.MODE === 'test';
 function pickPath(pickId?: string) {
   if (useMockApi) return pickId ? `/__mock/picks/${pickId}` : '/__mock/picks/today';
   return pickId ? `/picks/${pickId}` : '/picks/today';
+}
+
+function picksPath() {
+  return useMockApi ? '/__mock/picks' : '/picks';
+}
+
+export function usePastPicks() {
+  return useQuery({
+    queryKey: ['picks'],
+    queryFn: () =>
+      apiRequest<PickList>(picksPath(), {
+        method: 'GET',
+        schema: pickListSchema,
+      }),
+  });
+}
+
+export function useVoteHistory() {
+  return useQuery({
+    queryKey: ['vote-history'],
+    queryFn: () =>
+      apiRequest<VoteHistory>(useMockApi ? '/__mock/members/me/votes' : '/members/me/votes', {
+        method: 'GET',
+        schema: voteHistorySchema,
+      }),
+  });
 }
 
 function opinionsPath(pickId: string) {
@@ -51,7 +82,10 @@ export function useVote(pickId: string) {
         schema: pickSchema,
       }),
     onSuccess: (pick) => {
-      queryClient.setQueryData(['pick', pickId === 'pick-2026-09-17' ? 'today' : pickId], pick);
+      queryClient.setQueryData(['pick', pickId], pick);
+      if (pickId === 'pick-2026-09-17') {
+        queryClient.setQueryData(['pick', 'today'], pick);
+      }
     },
   });
 }
