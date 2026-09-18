@@ -80,7 +80,7 @@ function PickMeta({ pick, detail }: { pick: Pick; detail: boolean }) {
   );
 }
 
-function OpinionCard({ opinion }: { opinion: Opinion }) {
+function OpinionCard({ opinion, onLike }: { opinion: Opinion; onLike?: () => void }) {
   return (
     <article className="opinion-card">
       <div className="opinion-card__topline">
@@ -91,7 +91,12 @@ function OpinionCard({ opinion }: { opinion: Opinion }) {
         <time dateTime={opinion.createdAt}>{opinion.edited ? '수정됨' : '최근'}</time>
       </div>
       <p>{opinion.body}</p>
-      <button className="opinion-card__like" type="button" disabled={opinion.ownedByMe}>
+      <button
+        className="opinion-card__like"
+        type="button"
+        disabled={opinion.ownedByMe}
+        onClick={onLike}
+      >
         {opinion.likedByMe ? '♥' : '♡'} {opinion.likeCount}
       </button>
     </article>
@@ -100,6 +105,7 @@ function OpinionCard({ opinion }: { opinion: Opinion }) {
 
 function ResultAndOpinions({ pick }: { pick: Pick }) {
   const opinionsQuery = useOpinions(pick.id, Boolean(pick.result));
+  const { notify } = useToast();
   const [filter, setFilter] = useState<'all' | Choice>('all');
   const opinions = opinionsQuery.data?.items ?? [];
   const filteredOpinions =
@@ -113,7 +119,11 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
         {(['A', 'B'] as const).map((choice) => {
           const opinion = pick.representativeOpinions[choice];
           return opinion ? (
-            <OpinionCard key={choice} opinion={opinion} />
+            <OpinionCard
+              key={choice}
+              opinion={opinion}
+              onLike={() => notify({ tone: 'info', title: '현재 지원하지 않는 기능이에요.' })}
+            />
           ) : (
             <div className="representative-opinions__empty" key={choice}>
               <span className={`choice-label choice-label--${choice.toLowerCase()}`}>{choice}</span>
@@ -125,7 +135,7 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
       <Button
         variant="secondary"
         className="pick-results__opinion-button"
-        onClick={() => undefined}
+        onClick={() => notify({ tone: 'info', title: '현재 지원하지 않는 기능이에요.' })}
       >
         의견 남기기
       </Button>
@@ -158,7 +168,11 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
           <EmptyState title="아직 의견이 없어요" description="첫 의견을 남겨보세요." />
         )}
         {filteredOpinions.map((opinion) => (
-          <OpinionCard key={opinion.id} opinion={opinion} />
+          <OpinionCard
+            key={opinion.id}
+            opinion={opinion}
+            onLike={() => notify({ tone: 'info', title: '현재 지원하지 않는 기능이에요.' })}
+          />
         ))}
       </div>
     </section>
