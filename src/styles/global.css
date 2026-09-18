@@ -397,9 +397,9 @@ select {
   list-style: none;
 }
 .app-toast {
-  display: flex;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 40px;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   padding: 14px 12px 14px 16px;
   border: 1px solid var(--wp-border-default);
@@ -407,29 +407,52 @@ select {
   background: var(--wp-bg-elevated);
   box-shadow: 0 10px 28px rgb(23 21 39 / 18%);
 }
-.app-toast > div {
+.app-toast__content {
   min-width: 0;
 }
-.app-toast [data-radix-toast-announce-exclude] {
+.app-toast__content [data-radix-toast-announce-exclude] {
   margin: 0;
 }
-.app-toast div:first-child > div:first-child {
+.app-toast__content > div:first-child {
   font-size: 14px;
   font-weight: 700;
 }
-.app-toast div:first-child > div:last-child {
+.app-toast__content > div:last-child {
   margin-top: 3px;
   color: var(--wp-text-secondary);
   font-size: 13px;
 }
-.app-toast--success {
-  border-left: 4px solid #3b9a72;
+.app-toast__status {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
 }
-.app-toast--info {
-  border-left: 4px solid var(--wp-brand-primary);
+.app-toast__status svg {
+  width: 20px;
+  height: 20px;
 }
-.app-toast--error {
-  border-left: 4px solid var(--wp-danger);
+.app-toast--success .app-toast__status {
+  background: color-mix(in srgb, #3b9a72 14%, transparent);
+  color: #3b9a72;
+}
+.app-toast--info .app-toast__status,
+.app-toast--loading .app-toast__status {
+  background: color-mix(in srgb, var(--wp-brand-primary) 14%, transparent);
+  color: var(--wp-brand-primary);
+}
+.app-toast--error .app-toast__status {
+  background: color-mix(in srgb, var(--wp-danger) 14%, transparent);
+  color: var(--wp-danger);
+}
+.app-toast__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid color-mix(in srgb, var(--wp-brand-primary) 28%, transparent);
+  border-top-color: var(--wp-brand-primary);
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
 }
 
 .view-state {
@@ -467,6 +490,14 @@ select {
   border-top-color: var(--wp-brand-primary);
   border-radius: 50%;
   animation: spin 800ms linear infinite;
+}
+.view-state--loading {
+  align-content: center;
+  min-height: 156px;
+  gap: 12px;
+}
+.view-state--loading p {
+  margin: 0;
 }
 
 .ui-textarea {

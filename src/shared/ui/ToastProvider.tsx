@@ -1,8 +1,15 @@
 import * as Toast from '@radix-ui/react-toast';
 import { type ReactNode, useCallback, useRef, useState } from 'react';
 
-import { CloseIcon } from './icons';
+import { CheckIcon, CloseIcon, ErrorIcon, InfoIcon } from './icons';
 import { type Notice, ToastContext } from './ToastContext';
+
+function ToastStatusIcon({ tone }: Pick<Notice, 'tone'>) {
+  if (tone === 'success') return <CheckIcon />;
+  if (tone === 'error') return <ErrorIcon />;
+  if (tone === 'loading') return <span className="app-toast__spinner" />;
+  return <InfoIcon />;
+}
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [active, setActive] = useState<Notice | null>(null);
@@ -39,7 +46,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               if (!open) showNext();
             }}
           >
-            <div>
+            <span className="app-toast__status" aria-hidden="true">
+              <ToastStatusIcon tone={active.tone} />
+            </span>
+            <div className="app-toast__content">
               <Toast.Title>{active.title}</Toast.Title>
               {active.description && <Toast.Description>{active.description}</Toast.Description>}
             </div>

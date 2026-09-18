@@ -72,6 +72,40 @@ export function Component() {
       <section className="ui-gallery__section">
         <h2>오버레이와 알림</h2>
         <div className="ui-gallery__row">
+          <Button
+            variant="secondary"
+            size="medium"
+            onClick={() => notify({ tone: 'success', title: '저장했어요.' })}
+          >
+            성공 알림
+          </Button>
+          <Button
+            variant="secondary"
+            size="medium"
+            onClick={() => notify({ tone: 'info', title: '현재 지원하지 않는 기능이에요.' })}
+          >
+            안내 알림
+          </Button>
+          <Button
+            variant="secondary"
+            size="medium"
+            onClick={() =>
+              notify({
+                tone: 'error',
+                title: '불러오지 못했어요.',
+                description: '잠시 후 다시 시도해 주세요.',
+              })
+            }
+          >
+            오류 알림
+          </Button>
+          <Button
+            variant="secondary"
+            size="medium"
+            onClick={() => notify({ tone: 'loading', title: '다시 불러오는 중이에요.' })}
+          >
+            처리 중 알림
+          </Button>
           <Sheet
             trigger={
               <Button variant="secondary" size="medium">
@@ -116,7 +150,7 @@ export function Component() {
         />
         <ErrorState
           description="네트워크 연결을 확인하고 다시 시도해 주세요."
-          onRetry={() => notify({ tone: 'info', title: '다시 불러오는 중이에요.' })}
+          onRetry={() => notify({ tone: 'loading', title: '다시 불러오는 중이에요.' })}
         />
       </section>
     </main>
