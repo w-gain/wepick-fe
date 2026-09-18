@@ -904,6 +904,7 @@ select {
 .sheet-content__header-copy {
   min-width: 0;
   flex: 1;
+  padding-top: 4px;
 }
 .sheet-content h2,
 .confirm-dialog h2 {
@@ -923,6 +924,7 @@ select {
   height: 44px;
   margin: -6px 0 0;
   border-radius: 12px;
+  background: var(--wp-bg-subtle);
 }
 .icon-button {
   display: grid;
