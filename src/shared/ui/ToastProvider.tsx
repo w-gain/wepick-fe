@@ -13,10 +13,12 @@ function ToastStatusIcon({ tone }: Pick<Notice, 'tone'>) {
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [active, setActive] = useState<Notice[]>([]);
+  const [suspended, setSuspended] = useState(false);
   const id = useRef(0);
 
   const notify = useCallback(
     (notice: Omit<Notice, 'id'>) => {
+      if (suspended) return;
       const duplicate = active.some(
         (item) => item.title === notice.title && item.description === notice.description,
       );
@@ -25,11 +27,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       const next = { ...notice, id: ++id.current };
       setActive((items) => [next, ...items]);
     },
-    [active],
+    [active, suspended],
   );
 
+  const clear = useCallback(() => setActive([]), []);
+
   return (
-    <ToastContext.Provider value={{ notify }}>
+    <ToastContext.Provider value={{ notify, clear, setSuspended }}>
       <Toast.Provider swipeDirection="down">
         {children}
         {active.map((notice) => (

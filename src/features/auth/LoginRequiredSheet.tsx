@@ -1,4 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog';
+import { useEffect, useState } from 'react';
 
 import { Button, CloseIcon, useToast } from '../../shared/ui';
 
@@ -9,11 +10,19 @@ type LoginRequiredSheetProps = {
 };
 
 export function LoginRequiredSheet({ open, actionLabel, onOpenChange }: LoginRequiredSheetProps) {
-  const { notify } = useToast();
+  const { clear, setSuspended } = useToast();
+  const [loginStarted, setLoginStarted] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    clear();
+    setSuspended(true);
+    setLoginStarted(false);
+    return () => setSuspended(false);
+  }, [clear, open, setSuspended]);
 
   function startLogin() {
-    notify({ tone: 'info', title: '카카오 로그인은 다음 단계에서 연결돼요.' });
-    onOpenChange(false);
+    setLoginStarted(true);
   }
 
   return (
@@ -33,7 +42,14 @@ export function LoginRequiredSheet({ open, actionLabel, onOpenChange }: LoginReq
               <CloseIcon />
             </Dialog.Close>
           </header>
-          <Button onClick={startLogin}>카카오로 계속하기</Button>
+          <Button disabled={loginStarted} onClick={startLogin}>
+            {loginStarted ? '로그인 준비 중…' : '카카오로 계속하기'}
+          </Button>
+          {loginStarted && (
+            <p className="sheet-content__inline-status" role="status">
+              카카오 로그인은 다음 단계에서 연결돼요.
+            </p>
+          )}
           <Dialog.Close asChild>
             <Button variant="ghost">취소</Button>
           </Dialog.Close>
