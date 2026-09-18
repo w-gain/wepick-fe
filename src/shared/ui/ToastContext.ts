@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-export type ToastTone = 'success' | 'info' | 'error';
+export type ToastTone = 'success' | 'info' | 'error' | 'loading';
 export type Notice = { id: number; title: string; description?: string; tone: ToastTone };
 export type ToastContextValue = { notify: (notice: Omit<Notice, 'id'>) => void };
 

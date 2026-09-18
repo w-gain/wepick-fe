@@ -2,7 +2,7 @@ import { Button } from './Button';
 
 export function LoadingState({ label = '불러오는 중이에요' }: { label?: string }) {
   return (
-    <div className="view-state" role="status">
+    <div className="view-state view-state--loading" role="status">
       <span className="view-state__spinner" />
       <p>{label}</p>
     </div>
