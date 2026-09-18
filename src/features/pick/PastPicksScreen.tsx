@@ -24,7 +24,7 @@ function PastPickCard({ pick }: { pick: PickList['items'][number] }) {
       <span
         className={`past-pick-card__badge${choice ? ` past-pick-card__badge--${choice.toLowerCase()}` : ''}`}
       >
-        {choice ?? '·'}
+        {choice ?? '○'}
       </span>
       <span className="past-pick-card__body">
         <span className="past-pick-card__meta">
