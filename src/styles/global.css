@@ -329,10 +329,19 @@ select {
   border-color: var(--wp-brand-primary);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--wp-brand-primary) 18%, transparent);
 }
+.profile-edit-field input[aria-invalid='true'] {
+  border-color: var(--wp-danger);
+}
 .profile-edit-field small {
   color: var(--wp-text-tertiary);
   font-size: 11px;
   line-height: 1.45;
+}
+.profile-edit-field__error {
+  color: var(--wp-danger) !important;
+}
+.profile-edit-avatar-wrap > .profile-edit-field__error {
+  margin-top: -4px;
 }
 .past-picks-header {
   margin-bottom: 32px;
