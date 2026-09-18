@@ -1,11 +1,5 @@
-import { RoutePlaceholder } from './RoutePlaceholder';
+import { ProfileScreen } from '../features/profile/ProfileScreen';
 
 export function Component() {
-  return (
-    <RoutePlaceholder
-      screenId="SCR-005"
-      title="프로필"
-      description="프로필은 후속 화면 구현 단계에서 추가합니다."
-    />
-  );
+  return <ProfileScreen />;
 }

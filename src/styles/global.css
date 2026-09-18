@@ -148,6 +148,75 @@ select {
   min-height: 100dvh;
   padding: 0 18px calc(86px + env(safe-area-inset-bottom));
 }
+.profile-screen {
+  min-height: 100dvh;
+  padding: 0 18px calc(86px + env(safe-area-inset-bottom));
+}
+.profile-header {
+  margin-bottom: 26px;
+}
+.profile-screen > h1 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.4;
+  letter-spacing: -0.04em;
+}
+.profile-summary {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  margin: 34px 0 36px;
+}
+.profile-summary__edit {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: var(--wp-brand-primary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.profile-summary__avatar {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--wp-brand-primary) 9%, var(--wp-bg-surface));
+  color: var(--wp-brand-primary);
+  font-size: 26px;
+  font-weight: 800;
+}
+.profile-summary strong {
+  font-size: 16px;
+}
+.profile-account {
+  display: grid;
+  gap: 18px;
+}
+.profile-account h2 {
+  margin: 0 0 8px;
+  color: var(--wp-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+.profile-account button {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--wp-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.profile-account .profile-account__danger {
+  color: var(--wp-danger);
+}
 .past-picks-header {
   margin-bottom: 32px;
 }
