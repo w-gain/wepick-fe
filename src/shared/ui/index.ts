@@ -7,3 +7,4 @@ export * from './ToastProvider';
 export * from './ToastContext';
 export * from './ViewState';
 export * from './VoteChoice';
+export * from './icons';

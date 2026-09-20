@@ -107,3 +107,61 @@ export function ErrorIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function MoonIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path
+        d="M20 15.2A8.2 8.2 0 0 1 8.8 4 8.2 8.2 0 1 0 20 15.2Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Icon>
+  );
+}
+
+export function ShareIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="18" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="6" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="18" cy="19" r="2.5" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </Icon>
+  );
+}
+
+export function BackIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path
+        d="m14.5 5-7 7 7 7"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Icon>
+  );
+}
+
+export function TrashIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path
+        d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Icon>
+  );
+}

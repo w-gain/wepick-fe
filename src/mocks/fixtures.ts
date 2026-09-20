@@ -73,6 +73,20 @@ export const pastPickBeforeVote: Pick = {
   representativeDate: '2026-09-16',
 };
 
+export const pastPickUnvoted: Pick = {
+  ...todayPickBeforeVote,
+  id: 'pick-2026-09-15',
+  question: '아침형 인간 vs 저녁형 인간?',
+  representativeDate: '2026-09-15',
+};
+
+export const pastPickUnvotedAfterVote: Pick = {
+  ...pastPickUnvoted,
+  userVote: 'A',
+  result: todayPickAfterVote.result,
+  representativeOpinions: todayPickAfterVote.representativeOpinions,
+};
+
 export const pastPickAfterVote: Pick = {
   ...todayPickAfterVote,
   ...pastPickBeforeVote,
@@ -81,16 +95,22 @@ export const pastPickAfterVote: Pick = {
   representativeOpinions: todayPickAfterVote.representativeOpinions,
 };
 
+function pickSummary(pick: Pick, userVote: Pick['userVote']): PickList['items'][number] {
+  return {
+    id: pick.id,
+    question: pick.question,
+    category: pick.category,
+    representativeDate: pick.representativeDate,
+    options: pick.options,
+    userVote,
+  };
+}
+
 export const pastPicks: PickList = {
   items: [
-    { ...basePick, userVote: 'A' },
-    {
-      ...basePick,
-      id: 'pick-2026-09-16',
-      question: '쉬는 날엔 집콕 vs 외출?',
-      representativeDate: '2026-09-16',
-      userVote: 'B',
-    },
+    pickSummary(basePick as Pick, 'A'),
+    pickSummary(pastPickBeforeVote, 'B'),
+    pickSummary(pastPickUnvoted, null),
   ],
   nextCursor: null,
 };
@@ -105,12 +125,18 @@ export const memberProfile: MemberProfile = {
 };
 
 export const voteHistory: VoteHistory = {
-  items: pastPicks.items.map((pick, index) => ({
-    id: `vote-${index + 1}`,
-    pick,
-    choice: pick.userVote ?? 'A',
-    votedAt: `${pick.representativeDate}T12:00:00.000Z`,
-  })),
+  items: pastPicks.items.flatMap((pick, index) =>
+    pick.userVote
+      ? [
+          {
+            id: `vote-${index + 1}`,
+            pick,
+            choice: pick.userVote,
+            votedAt: `${pick.representativeDate}T12:00:00.000Z`,
+          },
+        ]
+      : [],
+  ),
   nextCursor: null,
 };
 

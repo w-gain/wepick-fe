@@ -4,7 +4,8 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 
 import { router } from './app/router';
-import { enableMocking } from './app/enableMocking';
+import { dataMode, enableMocking } from './app/enableMocking';
+import { AuthFlowProvider } from './features/auth/AuthFlowProvider';
 import { ToastProvider } from './shared/ui';
 import './styles/global.css';
 
@@ -29,13 +30,19 @@ if (!root) {
 
 async function bootstrap() {
   await enableMocking();
+  const mockAuthStatus =
+    new URLSearchParams(window.location.search).get('auth') === 'anonymous'
+      ? 'anonymous'
+      : 'authenticated';
 
   createRoot(root as HTMLElement).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <RouterProvider router={router} />
-        </ToastProvider>
+        <AuthFlowProvider initialStatus={dataMode === 'mock' ? mockAuthStatus : 'unknown'}>
+          <ToastProvider>
+            <RouterProvider router={router} />
+          </ToastProvider>
+        </AuthFlowProvider>
       </QueryClientProvider>
     </StrictMode>,
   );

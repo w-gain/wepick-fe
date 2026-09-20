@@ -12,46 +12,47 @@ function ToastStatusIcon({ tone }: Pick<Notice, 'tone'>) {
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [active, setActive] = useState<Notice | null>(null);
-  const queue = useRef<Notice[]>([]);
+  const [notices, setNotices] = useState<Notice[]>([]);
+  const [suspended, setSuspended] = useState(false);
   const id = useRef(0);
 
-  const showNext = useCallback(() => setActive(queue.current.shift() ?? null), []);
-
-  const notify = useCallback(
-    (notice: Omit<Notice, 'id'>) => {
-      const duplicate = active?.title === notice.title && active.description === notice.description;
-      const queued = queue.current.some(
+  const notify = useCallback((notice: Omit<Notice, 'id'>) => {
+    setNotices((items) => {
+      const duplicate = items.some(
         (item) => item.title === notice.title && item.description === notice.description,
       );
-      if (duplicate || queued) return;
+      if (duplicate) return items;
 
       const next = { ...notice, id: ++id.current };
-      if (active) queue.current.push(next);
-      else setActive(next);
-    },
-    [active],
-  );
+      return [...items, next];
+    });
+  }, []);
+
+  const clear = useCallback(() => setNotices([]), []);
+  const activeNotice = suspended ? undefined : notices[0];
 
   return (
-    <ToastContext.Provider value={{ notify }}>
-      <Toast.Provider swipeDirection="down" duration={active?.tone === 'error' ? 5000 : 3000}>
+    <ToastContext.Provider value={{ notify, clear, setSuspended }}>
+      <Toast.Provider swipeDirection="down">
         {children}
-        {active && (
+        {activeNotice && (
           <Toast.Root
-            key={active.id}
-            className={`app-toast app-toast--${active.tone}`}
+            key={activeNotice.id}
+            className={`app-toast app-toast--${activeNotice.tone}`}
             open
+            duration={activeNotice.tone === 'error' ? 5000 : 3000}
             onOpenChange={(open) => {
-              if (!open) showNext();
+              if (!open) setNotices((items) => items.slice(1));
             }}
           >
             <span className="app-toast__status" aria-hidden="true">
-              <ToastStatusIcon tone={active.tone} />
+              <ToastStatusIcon tone={activeNotice.tone} />
             </span>
             <div className="app-toast__content">
-              <Toast.Title>{active.title}</Toast.Title>
-              {active.description && <Toast.Description>{active.description}</Toast.Description>}
+              <Toast.Title>{activeNotice.title}</Toast.Title>
+              {activeNotice.description && (
+                <Toast.Description>{activeNotice.description}</Toast.Description>
+              )}
             </div>
             <Toast.Close className="icon-button" aria-label="알림 닫기">
               <CloseIcon />

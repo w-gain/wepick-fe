@@ -1,4 +1,4 @@
-import type { ZodType } from 'zod';
+import type { ResponseAdapter } from './responseAdapter';
 
 export class ApiError extends Error {
   constructor(
@@ -11,11 +11,11 @@ export class ApiError extends Error {
 }
 
 type ApiRequestOptions<T> = RequestInit & {
-  schema: ZodType<T>;
+  responseAdapter: ResponseAdapter<T>;
 };
 
 export async function apiRequest<T>(path: string, options: ApiRequestOptions<T>): Promise<T> {
-  const { schema, ...init } = options;
+  const { responseAdapter, ...init } = options;
   const headers = new Headers(init.headers);
 
   if (!headers.has('Accept')) {
@@ -34,5 +34,5 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions<T>)
     throw new ApiError(response.status, body);
   }
 
-  return schema.parse(body);
+  return responseAdapter.fromResponse(body);
 }
