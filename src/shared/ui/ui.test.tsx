@@ -1,9 +1,23 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { todayPickAfterVote } from '../../mocks/fixtures';
-import { Button, ConfirmDialog, ResultBar, VoteChoice } from '.';
+import { Button, ConfirmDialog, ResultBar, ToastProvider, useToast, VoteChoice } from '.';
+
+function ToastQueueFixture() {
+  const { notify } = useToast();
+  return (
+    <>
+      <button type="button" onClick={() => notify({ tone: 'success', title: '첫 번째 알림' })}>
+        첫 번째 추가
+      </button>
+      <button type="button" onClick={() => notify({ tone: 'info', title: '두 번째 알림' })}>
+        두 번째 추가
+      </button>
+    </>
+  );
+}
 
 describe('common UI', () => {
   it('reports the selected vote choice', async () => {
@@ -41,5 +55,23 @@ describe('common UI', () => {
     expect(screen.getByRole('alertdialog')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '삭제' }));
     expect(onConfirm).toHaveBeenCalledOnce();
+  });
+
+  it('shows queued notifications one at a time', async () => {
+    const user = userEvent.setup();
+    render(
+      <ToastProvider>
+        <ToastQueueFixture />
+      </ToastProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: '첫 번째 추가' }));
+    await user.click(screen.getByRole('button', { name: '두 번째 추가' }));
+
+    expect(screen.getByText('첫 번째 알림')).toBeInTheDocument();
+    expect(screen.queryByText('두 번째 알림')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '알림 닫기' }));
+    expect(await screen.findByText('두 번째 알림')).toBeInTheDocument();
   });
 });

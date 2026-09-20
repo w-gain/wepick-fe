@@ -5,6 +5,7 @@ import { RouterProvider } from 'react-router-dom';
 
 import { router } from './app/router';
 import { enableMocking } from './app/enableMocking';
+import { AuthFlowProvider } from './features/auth/AuthFlowProvider';
 import { ToastProvider } from './shared/ui';
 import './styles/global.css';
 
@@ -33,9 +34,11 @@ async function bootstrap() {
   createRoot(root as HTMLElement).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <RouterProvider router={router} />
-        </ToastProvider>
+        <AuthFlowProvider>
+          <ToastProvider>
+            <RouterProvider router={router} />
+          </ToastProvider>
+        </AuthFlowProvider>
       </QueryClientProvider>
     </StrictMode>,
   );

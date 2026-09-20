@@ -20,6 +20,8 @@ describe('screen data contracts', () => {
     expect(memberProfileSchema.parse(memberProfile)).toEqual(memberProfile);
     expect(voteHistorySchema.parse(voteHistory)).toEqual(voteHistory);
     expect(voteHistorySchema.parse(emptyVoteHistory)).toEqual(emptyVoteHistory);
+    expect(voteHistory.items).toHaveLength(2);
+    expect(voteHistory.items.every((item) => item.pick.userVote === item.choice)).toBe(true);
   });
 
   it('rejects results whose counts do not match the total', () => {

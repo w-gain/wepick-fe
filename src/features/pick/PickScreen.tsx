@@ -14,6 +14,7 @@ import {
   useToast,
   VoteChoice,
 } from '../../shared/ui';
+import type { LoginIntent } from '../auth/authFlow';
 import { LoginRequiredSheet } from '../auth/LoginRequiredSheet';
 import { useOpinions, usePick, useVote } from './api';
 
@@ -111,7 +112,8 @@ function OpinionCard({ opinion, onLike }: { opinion: Opinion; onLike?: () => voi
 function ResultAndOpinions({ pick }: { pick: Pick }) {
   const opinionsQuery = useOpinions(pick.id, Boolean(pick.result));
   const [filter, setFilter] = useState<'all' | Choice>('all');
-  const [loginOpen, setLoginOpen] = useState(false);
+  const [loginIntent, setLoginIntent] = useState<LoginIntent | null>(null);
+  const location = useLocation();
   const opinions = opinionsQuery.data?.items ?? [];
   const filteredOpinions =
     filter === 'all' ? opinions : opinions.filter((opinion) => opinion.choice === filter);
@@ -132,7 +134,17 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
         {(['A', 'B'] as const).map((choice) => {
           const opinion = pick.representativeOpinions[choice];
           return opinion ? (
-            <OpinionCard key={choice} opinion={opinion} onLike={() => setLoginOpen(true)} />
+            <OpinionCard
+              key={choice}
+              opinion={opinion}
+              onLike={() =>
+                setLoginIntent({
+                  action: 'like-opinion',
+                  returnTo: location.pathname,
+                  targetId: opinion.id,
+                })
+              }
+            />
           ) : (
             <div className="representative-opinions__empty" key={choice}>
               <span className={`choice-label choice-label--${choice.toLowerCase()}`}>{choice}</span>
@@ -144,7 +156,13 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
       <Button
         variant="secondary"
         className="pick-results__opinion-button"
-        onClick={() => setLoginOpen(true)}
+        onClick={() =>
+          setLoginIntent({
+            action: 'write-opinion',
+            returnTo: location.pathname,
+            targetId: pick.id,
+          })
+        }
       >
         의견 남기기
       </Button>
@@ -180,10 +198,33 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
           <EmptyState title="아직 의견이 없어요" description="첫 의견을 남겨보세요." />
         )}
         {filteredOpinions.map((opinion) => (
-          <OpinionCard key={opinion.id} opinion={opinion} onLike={() => setLoginOpen(true)} />
+          <OpinionCard
+            key={opinion.id}
+            opinion={opinion}
+            onLike={() =>
+              setLoginIntent({
+                action: 'like-opinion',
+                returnTo: location.pathname,
+                targetId: opinion.id,
+              })
+            }
+          />
         ))}
       </div>
-      <LoginRequiredSheet open={loginOpen} actionLabel="의견과 공감" onOpenChange={setLoginOpen} />
+      <LoginRequiredSheet
+        open={loginIntent !== null}
+        actionLabel={loginIntent?.action === 'like-opinion' ? '의견 공감' : '의견 남기기'}
+        intent={
+          loginIntent ?? {
+            action: 'write-opinion',
+            returnTo: location.pathname,
+            targetId: pick.id,
+          }
+        }
+        onOpenChange={(open) => {
+          if (!open) setLoginIntent(null);
+        }}
+      />
     </section>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,17 +16,6 @@ import { useMemberProfile } from './api';
 
 export function ProfileEditScreen() {
   const query = useMemberProfile();
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const { notify } = useToast();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [nickname, setNickname] = useState('');
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [imageError, setImageError] = useState(false);
-
-  useEffect(() => {
-    if (query.data) setNickname(query.data.nickname);
-  }, [query.data]);
 
   if (query.isLoading) {
     return (
@@ -47,7 +36,19 @@ export function ProfileEditScreen() {
     );
   }
 
-  const changed = nickname !== query.data.nickname || imageUrl !== null;
+  return <ProfileEditForm key={query.data.id} profile={query.data} />;
+}
+
+function ProfileEditForm({ profile }: { profile: MemberProfile }) {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { notify } = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [nickname, setNickname] = useState(profile.nickname);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
+
+  const changed = nickname !== profile.nickname || imageUrl !== null;
   const valid = nickname.trim().length >= 2;
   const nicknameError = nickname.trim().length > 0 && !valid;
 
@@ -114,8 +115,8 @@ export function ProfileEditScreen() {
         <h1 id="profile-edit-title">프로필 편집</h1>
       </header>
       <div className="profile-edit-avatar-wrap">
-        <div className="profile-edit-avatar" aria-label={`${query.data.nickname} 프로필 이미지`}>
-          {imageUrl ? <img src={imageUrl} alt="" /> : query.data.nickname.slice(0, 1)}
+        <div className="profile-edit-avatar" aria-label={`${profile.nickname} 프로필 이미지`}>
+          {imageUrl ? <img src={imageUrl} alt="" /> : profile.nickname.slice(0, 1)}
         </div>
         <button type="button" onClick={() => inputRef.current?.click()}>
           사진 변경

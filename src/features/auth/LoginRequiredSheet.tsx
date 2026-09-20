@@ -2,31 +2,44 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { useEffect, useState } from 'react';
 
 import { Button, CloseIcon, useToast } from '../../shared/ui';
+import { type LoginIntent, useAuthFlow } from './authFlow';
 
 type LoginRequiredSheetProps = {
   open: boolean;
   actionLabel: string;
+  intent: LoginIntent;
   onOpenChange: (open: boolean) => void;
 };
 
-export function LoginRequiredSheet({ open, actionLabel, onOpenChange }: LoginRequiredSheetProps) {
+type OpenLoginRequiredSheetProps = Omit<LoginRequiredSheetProps, 'open'>;
+
+function OpenLoginRequiredSheet({
+  actionLabel,
+  intent,
+  onOpenChange,
+}: OpenLoginRequiredSheetProps) {
   const { clear, setSuspended } = useToast();
+  const { beginLogin, cancelLogin } = useAuthFlow();
   const [loginStarted, setLoginStarted] = useState(false);
 
   useEffect(() => {
-    if (!open) return;
     clear();
     setSuspended(true);
-    setLoginStarted(false);
     return () => setSuspended(false);
-  }, [clear, open, setSuspended]);
+  }, [clear, setSuspended]);
 
   function startLogin() {
+    beginLogin(intent);
     setLoginStarted(true);
   }
 
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) cancelLogin();
+    onOpenChange(nextOpen);
+  }
+
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root open onOpenChange={handleOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content className="sheet-content" aria-describedby="login-required-description">
@@ -57,4 +70,8 @@ export function LoginRequiredSheet({ open, actionLabel, onOpenChange }: LoginReq
       </Dialog.Portal>
     </Dialog.Root>
   );
+}
+
+export function LoginRequiredSheet({ open, ...props }: LoginRequiredSheetProps) {
+  return open ? <OpenLoginRequiredSheet {...props} /> : null;
 }

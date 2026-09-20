@@ -2,13 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { dataMode } from '../../app/enableMocking';
 import type { Choice, OpinionList, Pick, PickList, VoteHistory } from '../../shared/contracts';
-import {
-  opinionListSchema,
-  pickListSchema,
-  pickSchema,
-  voteHistorySchema,
-} from '../../shared/contracts';
 import { apiRequest } from '../../shared/api/client';
+import {
+  opinionListResponseAdapter,
+  pickListResponseAdapter,
+  pickResponseAdapter,
+  voteHistoryResponseAdapter,
+} from './responseAdapters';
 
 const useMockApi = dataMode === 'mock' || import.meta.env.MODE === 'test';
 
@@ -27,7 +27,7 @@ export function usePastPicks() {
     queryFn: () =>
       apiRequest<PickList>(picksPath(), {
         method: 'GET',
-        schema: pickListSchema,
+        responseAdapter: pickListResponseAdapter,
       }),
   });
 }
@@ -38,7 +38,7 @@ export function useVoteHistory() {
     queryFn: () =>
       apiRequest<VoteHistory>(useMockApi ? '/__mock/members/me/votes' : '/members/me/votes', {
         method: 'GET',
-        schema: voteHistorySchema,
+        responseAdapter: voteHistoryResponseAdapter,
       }),
   });
 }
@@ -54,7 +54,11 @@ function votePath(pickId: string) {
 export function usePick(pickId?: string) {
   return useQuery({
     queryKey: ['pick', pickId ?? 'today'],
-    queryFn: () => apiRequest<Pick>(pickPath(pickId), { method: 'GET', schema: pickSchema }),
+    queryFn: () =>
+      apiRequest<Pick>(pickPath(pickId), {
+        method: 'GET',
+        responseAdapter: pickResponseAdapter,
+      }),
   });
 }
 
@@ -65,7 +69,7 @@ export function useOpinions(pickId: string, enabled: boolean) {
     queryFn: () =>
       apiRequest<OpinionList>(opinionsPath(pickId), {
         method: 'GET',
-        schema: opinionListSchema,
+        responseAdapter: opinionListResponseAdapter,
       }),
   });
 }
@@ -79,7 +83,7 @@ export function useVote(pickId: string) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ choice }),
-        schema: pickSchema,
+        responseAdapter: pickResponseAdapter,
       }),
     onSuccess: (pick) => {
       queryClient.setQueryData(['pick', pickId], pick);

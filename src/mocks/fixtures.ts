@@ -125,12 +125,18 @@ export const memberProfile: MemberProfile = {
 };
 
 export const voteHistory: VoteHistory = {
-  items: pastPicks.items.map((pick, index) => ({
-    id: `vote-${index + 1}`,
-    pick,
-    choice: pick.userVote ?? 'A',
-    votedAt: `${pick.representativeDate}T12:00:00.000Z`,
-  })),
+  items: pastPicks.items.flatMap((pick, index) =>
+    pick.userVote
+      ? [
+          {
+            id: `vote-${index + 1}`,
+            pick,
+            choice: pick.userVote,
+            votedAt: `${pick.representativeDate}T12:00:00.000Z`,
+          },
+        ]
+      : [],
+  ),
   nextCursor: null,
 };
 
