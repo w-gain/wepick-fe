@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { todayPickAfterVote, todayPickBeforeVote } from '../../mocks/fixtures';
 import { handlers } from '../../mocks/handlers';
 import { ToastProvider } from '../../shared/ui';
+import { AuthFlowProvider } from '../auth/AuthFlowProvider';
 import { PickScreen } from './PickScreen';
 
 const server = setupServer(...handlers);
@@ -21,9 +22,11 @@ function renderScreen() {
   return render(
     <MemoryRouter>
       <QueryClientProvider client={client}>
-        <ToastProvider>
-          <PickScreen />
-        </ToastProvider>
+        <AuthFlowProvider initialStatus="authenticated">
+          <ToastProvider>
+            <PickScreen />
+          </ToastProvider>
+        </AuthFlowProvider>
       </QueryClientProvider>
     </MemoryRouter>,
   );
@@ -58,6 +61,41 @@ describe('PickScreen', () => {
     await user.click(screen.getByRole('button', { name: '투표하기' }));
 
     expect(await screen.findByRole('heading', { name: '투표 결과' })).toBeInTheDocument();
+    expect(screen.getAllByText('계획이 있으면 여행지에서 마음이 더 편해요.')).toHaveLength(2);
+  });
+
+  it('opens the opinion editor with the existing opinion in edit mode', async () => {
+    const user = userEvent.setup();
+    server.use(http.get('*/api/__mock/picks/today', () => HttpResponse.json(todayPickAfterVote)));
+    renderScreen();
+
+    await screen.findByRole('heading', { name: todayPickAfterVote.question });
+    await user.click(screen.getByRole('button', { name: '내 의견 수정' }));
+
+    expect(screen.getByRole('dialog', { name: '의견 수정' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: '선택한 이유를 남겨주세요' })).toHaveValue(
+      '계획이 있으면 여행지에서 마음이 더 편해요.',
+    );
+    expect(screen.getByText('24 / 300')).toBeInTheDocument();
+  });
+
+  it('asks for confirmation before deleting my opinion', async () => {
+    const user = userEvent.setup();
+    server.use(http.get('*/api/__mock/picks/today', () => HttpResponse.json(todayPickAfterVote)));
+    renderScreen();
+
+    await screen.findByRole('heading', { name: todayPickAfterVote.question });
+    const deleteButtons = screen.getAllByRole('button', { name: '삭제' });
+    expect(deleteButtons.length).toBeGreaterThan(0);
+    await user.click(deleteButtons[0]!);
+
+    const dialog = screen.getByRole('alertdialog', { name: '의견을 삭제할까요?' });
+    expect(dialog).toBeInTheDocument();
+    expect(screen.getByText(/삭제한 의견은 복구할 수 없어요/)).toBeInTheDocument();
+    expect(screen.getByText(/투표 기록은 그대로 유지돼요/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '취소' }));
+    expect(dialog).not.toBeInTheDocument();
     expect(screen.getAllByText('계획이 있으면 여행지에서 마음이 더 편해요.')).toHaveLength(2);
   });
 });

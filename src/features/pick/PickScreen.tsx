@@ -15,7 +15,10 @@ import {
   VoteChoice,
 } from '../../shared/ui';
 import type { LoginIntent } from '../auth/authFlow';
+import { useAuthFlow } from '../auth/authFlow';
 import { LoginRequiredSheet } from '../auth/LoginRequiredSheet';
+import { OpinionDeleteDialog } from './OpinionDeleteDialog';
+import { OpinionEditorSheet } from './OpinionEditorSheet';
 import { useOpinions, usePick, useVote } from './api';
 
 type PickScreenProps = { pickId?: string };
@@ -86,7 +89,17 @@ function PickMeta({ pick, detail }: { pick: Pick; detail: boolean }) {
   );
 }
 
-function OpinionCard({ opinion, onLike }: { opinion: Opinion; onLike?: () => void }) {
+function OpinionCard({
+  opinion,
+  onLike,
+  onEdit,
+  onDelete,
+}: {
+  opinion: Opinion;
+  onLike?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+}) {
   return (
     <article className="opinion-card">
       <div className="opinion-card__topline">
@@ -97,26 +110,84 @@ function OpinionCard({ opinion, onLike }: { opinion: Opinion; onLike?: () => voi
         <time dateTime={opinion.createdAt}>{opinion.edited ? '수정됨' : '최근'}</time>
       </div>
       <p>{opinion.body}</p>
-      <button
-        className="opinion-card__like"
-        type="button"
-        disabled={opinion.ownedByMe}
-        onClick={onLike}
-      >
-        {opinion.likedByMe ? '♥' : '♡'} {opinion.likeCount}
-      </button>
+      {opinion.ownedByMe ? (
+        <div className="opinion-card__actions">
+          <button className="opinion-card__edit" type="button" onClick={onEdit}>
+            수정
+          </button>
+          <button className="opinion-card__delete" type="button" onClick={onDelete}>
+            삭제
+          </button>
+        </div>
+      ) : (
+        <button className="opinion-card__like" type="button" onClick={onLike}>
+          {opinion.likedByMe ? '♥' : '♡'} {opinion.likeCount}
+        </button>
+      )}
     </article>
   );
 }
+
+type OpinionEditorState = {
+  mode: 'create' | 'edit';
+  opinion?: Opinion;
+};
 
 function ResultAndOpinions({ pick }: { pick: Pick }) {
   const opinionsQuery = useOpinions(pick.id, Boolean(pick.result));
   const [filter, setFilter] = useState<'all' | Choice>('all');
   const [loginIntent, setLoginIntent] = useState<LoginIntent | null>(null);
+  const [editor, setEditor] = useState<OpinionEditorState | null>(null);
+  const [deleteOpinion, setDeleteOpinion] = useState<Opinion | null>(null);
   const location = useLocation();
+  const { status } = useAuthFlow();
+  const { notify } = useToast();
   const opinions = opinionsQuery.data?.items ?? [];
   const filteredOpinions =
     filter === 'all' ? opinions : opinions.filter((opinion) => opinion.choice === filter);
+  const forceCreateScenario =
+    import.meta.env.DEV && new URLSearchParams(location.search).get('opinion') === 'create';
+  const ownedOpinion = forceCreateScenario
+    ? undefined
+    : (opinions.find((opinion) => opinion.ownedByMe) ??
+      Object.values(pick.representativeOpinions).find((opinion) => opinion?.ownedByMe));
+
+  function openEditor(nextEditor: OpinionEditorState) {
+    if (status === 'authenticated') {
+      setEditor(nextEditor);
+      return;
+    }
+    setLoginIntent({
+      action: 'write-opinion',
+      returnTo: `${location.pathname}${location.search}`,
+      targetId: pick.id,
+      draft: nextEditor.opinion?.body,
+    });
+  }
+
+  function likeOpinion(opinion: Opinion) {
+    if (status === 'authenticated') {
+      notify({ tone: 'info', title: '현재 지원하지 않는 기능이에요.' });
+      return;
+    }
+    setLoginIntent({
+      action: 'like-opinion',
+      returnTo: `${location.pathname}${location.search}`,
+      targetId: opinion.id,
+    });
+  }
+
+  function requestDelete(opinion: Opinion) {
+    if (status === 'authenticated') {
+      setDeleteOpinion(opinion);
+      return;
+    }
+    setLoginIntent({
+      action: 'delete-opinion',
+      returnTo: `${location.pathname}${location.search}`,
+      targetId: opinion.id,
+    });
+  }
 
   return (
     <section className="pick-results" aria-labelledby="pick-results-title">
@@ -137,13 +208,9 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
             <OpinionCard
               key={choice}
               opinion={opinion}
-              onLike={() =>
-                setLoginIntent({
-                  action: 'like-opinion',
-                  returnTo: location.pathname,
-                  targetId: opinion.id,
-                })
-              }
+              onLike={() => likeOpinion(opinion)}
+              onEdit={() => openEditor({ mode: 'edit', opinion })}
+              onDelete={() => requestDelete(opinion)}
             />
           ) : (
             <div className="representative-opinions__empty" key={choice}>
@@ -157,14 +224,10 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
         variant="secondary"
         className="pick-results__opinion-button"
         onClick={() =>
-          setLoginIntent({
-            action: 'write-opinion',
-            returnTo: location.pathname,
-            targetId: pick.id,
-          })
+          openEditor(ownedOpinion ? { mode: 'edit', opinion: ownedOpinion } : { mode: 'create' })
         }
       >
-        의견 남기기
+        {ownedOpinion ? '내 의견 수정' : '의견 남기기'}
       </Button>
       <div className="opinion-list">
         <div className="opinion-list__header">
@@ -201,19 +264,21 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
           <OpinionCard
             key={opinion.id}
             opinion={opinion}
-            onLike={() =>
-              setLoginIntent({
-                action: 'like-opinion',
-                returnTo: location.pathname,
-                targetId: opinion.id,
-              })
-            }
+            onLike={() => likeOpinion(opinion)}
+            onEdit={() => openEditor({ mode: 'edit', opinion })}
+            onDelete={() => requestDelete(opinion)}
           />
         ))}
       </div>
       <LoginRequiredSheet
         open={loginIntent !== null}
-        actionLabel={loginIntent?.action === 'like-opinion' ? '의견 공감' : '의견 남기기'}
+        actionLabel={
+          loginIntent?.action === 'like-opinion'
+            ? '의견 공감'
+            : loginIntent?.action === 'delete-opinion'
+              ? '의견 삭제'
+              : '의견 남기기'
+        }
         intent={
           loginIntent ?? {
             action: 'write-opinion',
@@ -223,6 +288,34 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
         }
         onOpenChange={(open) => {
           if (!open) setLoginIntent(null);
+        }}
+      />
+      <OpinionEditorSheet
+        open={editor !== null}
+        mode={editor?.mode ?? 'create'}
+        choice={editor?.opinion?.choice ?? pick.userVote ?? 'A'}
+        optionLabel={
+          pick.options.find(
+            (option) => option.choice === (editor?.opinion?.choice ?? pick.userVote ?? 'A'),
+          )?.label ?? ''
+        }
+        initialBody={editor?.opinion?.body}
+        onOpenChange={(open) => {
+          if (!open) setEditor(null);
+        }}
+        onSubmit={() => {
+          setEditor(null);
+          notify({ tone: 'info', title: '현재 지원하지 않는 기능이에요.' });
+        }}
+      />
+      <OpinionDeleteDialog
+        open={deleteOpinion !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteOpinion(null);
+        }}
+        onDelete={() => {
+          setDeleteOpinion(null);
+          notify({ tone: 'info', title: '현재 지원하지 않는 기능이에요.' });
         }}
       />
     </section>

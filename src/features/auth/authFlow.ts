@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 
 export type AuthStatus = 'unknown' | 'anonymous' | 'authenticated';
 export type LoginIntent = {
-  action: 'write-opinion' | 'like-opinion' | 'view-history' | 'view-profile';
+  action: 'write-opinion' | 'like-opinion' | 'delete-opinion' | 'view-history' | 'view-profile';
   returnTo: string;
   targetId?: string;
   draft?: string;

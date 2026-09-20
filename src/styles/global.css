@@ -621,8 +621,27 @@ select {
   font-size: 12px;
   cursor: pointer;
 }
-.opinion-card__like:disabled {
-  cursor: default;
+.opinion-card__actions {
+  display: flex;
+  align-self: flex-start;
+  gap: 4px;
+  margin-top: auto;
+}
+.opinion-card__edit,
+.opinion-card__delete {
+  min-width: 44px;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--wp-bg-subtle);
+  color: var(--wp-brand-primary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.opinion-card__delete {
+  color: var(--wp-danger);
 }
 .pick-results__opinion-button {
   width: 100%;
@@ -928,6 +947,105 @@ select {
 .sheet-content__description-line {
   display: block;
 }
+.opinion-editor-sheet {
+  max-height: min(92dvh, 690px);
+  padding: 10px 20px calc(24px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+}
+.opinion-editor__header {
+  align-items: center;
+  margin-bottom: 18px;
+}
+.opinion-editor__header > .icon-button {
+  margin-top: -6px;
+}
+.opinion-editor__choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  margin-bottom: 18px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: var(--wp-bg-subtle);
+  color: var(--wp-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+}
+.opinion-editor__choice-badge {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+}
+.opinion-editor__choice-badge--a {
+  background: var(--wp-choice-a);
+}
+.opinion-editor__choice-badge--b {
+  background: var(--wp-choice-b);
+}
+.opinion-editor__field {
+  display: grid;
+  gap: 8px;
+}
+.opinion-editor__field > span {
+  font-size: 14px;
+  font-weight: 700;
+}
+.opinion-editor__field textarea {
+  width: 100%;
+  min-height: 132px;
+  padding: 14px;
+  resize: none;
+  border: 1.5px solid var(--wp-brand-primary);
+  border-radius: 16px;
+  outline: none;
+  background: var(--wp-bg-surface);
+  color: var(--wp-text-primary);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.opinion-editor__field textarea::placeholder {
+  color: var(--wp-text-tertiary);
+}
+.opinion-editor__field textarea:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wp-brand-primary) 15%, transparent);
+}
+.opinion-editor__field textarea:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+.opinion-editor__count {
+  display: block;
+  margin-top: 8px;
+  color: var(--wp-text-secondary);
+  font-size: 12px;
+  text-align: right;
+}
+.opinion-editor__help,
+.opinion-editor__error {
+  margin: 14px 0 18px !important;
+  font-size: 13px !important;
+}
+.opinion-editor__error {
+  color: var(--wp-danger) !important;
+}
+.opinion-editor__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.dialog-overlay--nested {
+  z-index: 40;
+}
+.confirm-dialog--nested {
+  z-index: 41;
+}
 .icon-button {
   display: grid;
   flex: 0 0 auto;
@@ -962,6 +1080,42 @@ select {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 22px;
+}
+.opinion-delete-dialog {
+  padding: 32px 22px 24px;
+  text-align: center;
+}
+.opinion-delete-dialog__icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--wp-danger) 18%, transparent);
+  color: var(--wp-danger);
+}
+.opinion-delete-dialog__icon svg {
+  width: 24px;
+  height: 24px;
+}
+.opinion-delete-dialog h2 {
+  font-size: 24px;
+  line-height: 34px;
+}
+.opinion-delete-dialog p {
+  margin-top: 10px;
+  line-height: 22px;
+}
+.opinion-delete-dialog__error {
+  color: var(--wp-danger) !important;
+  font-size: 13px !important;
+}
+.opinion-delete-dialog__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 24px;
 }
 
 .toast-viewport {

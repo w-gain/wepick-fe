@@ -2,8 +2,14 @@ import { type ReactNode, useCallback, useMemo, useState } from 'react';
 
 import { AuthFlowContext, type AuthStatus, type LoginIntent } from './authFlow';
 
-export function AuthFlowProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<AuthStatus>('unknown');
+export function AuthFlowProvider({
+  children,
+  initialStatus = 'unknown',
+}: {
+  children: ReactNode;
+  initialStatus?: AuthStatus;
+}) {
+  const [status, setStatus] = useState<AuthStatus>(initialStatus);
   const [pendingIntent, setPendingIntent] = useState<LoginIntent | null>(null);
 
   const beginLogin = useCallback((intent: LoginIntent) => setPendingIntent(intent), []);
