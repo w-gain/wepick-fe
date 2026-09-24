@@ -49,7 +49,7 @@ function OpenLoginRequiredSheet({
               <Dialog.Title>로그인이 필요해요</Dialog.Title>
               <Dialog.Description id="login-required-description">
                 <span className="sheet-content__description-line">
-                  {actionLabel}은 로그인 후 이용할 수 있어요.
+                  {`${actionLabel}은 로그인 후 이용할 수 있어요.`}
                 </span>
                 <span className="sheet-content__description-line">
                   로그인하면 지금 화면으로 돌아와요.

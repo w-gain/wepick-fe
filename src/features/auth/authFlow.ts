@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-export type AuthStatus = 'unknown' | 'anonymous' | 'authenticated';
+export type AuthStatus = 'unknown' | 'unavailable' | 'anonymous' | 'authenticated';
 export type LoginIntent = {
   action: 'write-opinion' | 'like-opinion' | 'delete-opinion' | 'view-history' | 'view-profile';
   returnTo: string;
@@ -12,6 +12,7 @@ export type AuthFlowContextValue = {
   status: AuthStatus;
   pendingIntent: LoginIntent | null;
   setStatus: (status: AuthStatus) => void;
+  retrySession: () => void;
   beginLogin: (intent: LoginIntent) => void;
   consumeLoginIntent: () => LoginIntent | null;
   cancelLogin: () => void;

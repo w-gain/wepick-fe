@@ -9,6 +9,7 @@ export const categorySchema = z.object({
 });
 
 export const pickOptionSchema = z.object({
+  id: z.number().int().positive().nullable(),
   choice: choiceSchema,
   label: z.string().min(1),
   imageUrl: z.url().nullable(),
@@ -33,7 +34,10 @@ export const voteResultSchema = z
 
 export const profileImageSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('default'), key: z.string().min(1) }),
-  z.object({ kind: z.literal('url'), url: z.url() }),
+  z.object({
+    kind: z.literal('url'),
+    url: z.union([z.url(), z.string().regex(/^\/(?!\/)[^\s]*$/)]),
+  }),
 ]);
 
 export const memberSummarySchema = z.object({
@@ -57,7 +61,7 @@ export const opinionSchema = z.object({
 const pickBaseSchema = z.object({
   id: z.string().min(1),
   question: z.string().min(1),
-  category: categorySchema,
+  category: categorySchema.nullable(),
   representativeDate: z.iso.date(),
   options: z.tuple([pickOptionSchema, pickOptionSchema]),
   userVote: choiceSchema.nullable(),
@@ -65,22 +69,31 @@ const pickBaseSchema = z.object({
   representativeOpinions: z.object({ A: opinionSchema.nullable(), B: opinionSchema.nullable() }),
 });
 
-export const pickSchema = pickBaseSchema.superRefine((pick, context) => {
-  if (pick.options[0].choice !== 'A' || pick.options[1].choice !== 'B') {
-    context.addIssue({
-      code: 'custom',
-      path: ['options'],
-      message: '선택지는 A, B 순서여야 해요.',
-    });
-  }
-  if ((pick.userVote === null) !== (pick.result === null)) {
-    context.addIssue({
-      code: 'custom',
-      path: ['result'],
-      message: '사용자 투표와 결과 공개 상태가 일치해야 해요.',
-    });
-  }
-});
+export const pickSchema = pickBaseSchema
+  .extend({ opinionsAvailable: z.boolean() })
+  .superRefine((pick, context) => {
+    if (pick.options[0].choice !== 'A' || pick.options[1].choice !== 'B') {
+      context.addIssue({
+        code: 'custom',
+        path: ['options'],
+        message: '선택지는 A, B 순서여야 해요.',
+      });
+    }
+    if ((pick.userVote === null) !== (pick.result === null)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['result'],
+        message: '사용자 투표와 결과 공개 상태가 일치해야 해요.',
+      });
+    }
+    if (!pick.opinionsAvailable && Object.values(pick.representativeOpinions).some(Boolean)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['representativeOpinions'],
+        message: '의견을 제공하지 않는 Pick에는 대표 의견을 표시할 수 없어요.',
+      });
+    }
+  });
 
 export const pickSummarySchema = pickBaseSchema.pick({
   id: true,

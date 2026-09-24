@@ -6,6 +6,7 @@ import { RouterProvider } from 'react-router-dom';
 import { router } from './app/router';
 import { dataMode, enableMocking } from './app/enableMocking';
 import { AuthFlowProvider } from './features/auth/AuthFlowProvider';
+import { resolveCurrentSessionStatus } from './features/auth/api';
 import { ToastProvider } from './shared/ui';
 import './styles/global.css';
 
@@ -38,7 +39,10 @@ async function bootstrap() {
   createRoot(root as HTMLElement).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <AuthFlowProvider initialStatus={dataMode === 'mock' ? mockAuthStatus : 'unknown'}>
+        <AuthFlowProvider
+          initialStatus={dataMode === 'mock' ? mockAuthStatus : 'unknown'}
+          resolveInitialStatus={dataMode === 'real' ? resolveCurrentSessionStatus : undefined}
+        >
           <ToastProvider>
             <RouterProvider router={router} />
           </ToastProvider>

@@ -38,16 +38,17 @@ const opinions: Record<'A' | 'B', Opinion> = {
 const basePick = {
   id: 'pick-2026-09-17',
   question: '여행은 계획대로 vs 발길 닿는 대로?',
-  category: { id: 'daily', label: '일상' },
+  category: { id: 'daily', label: '취향·일상' },
   representativeDate: '2026-09-17',
   options: [
-    { choice: 'A', label: '꼼꼼하게 계획대로', imageUrl: null },
-    { choice: 'B', label: '발길 닿는 대로', imageUrl: null },
+    { id: null, choice: 'A', label: '꼼꼼하게 계획대로', imageUrl: null },
+    { id: null, choice: 'B', label: '발길 닿는 대로', imageUrl: null },
   ] satisfies Pick['options'],
 };
 
 export const todayPickBeforeVote: Pick = {
   ...basePick,
+  opinionsAvailable: true,
   userVote: null,
   result: null,
   representativeOpinions: { A: null, B: null },
@@ -55,6 +56,7 @@ export const todayPickBeforeVote: Pick = {
 
 export const todayPickAfterVote: Pick = {
   ...basePick,
+  opinionsAvailable: true,
   userVote: 'A',
   result: {
     totalVotes: 1248,
@@ -108,7 +110,7 @@ function pickSummary(pick: Pick, userVote: Pick['userVote']): PickList['items'][
 
 export const pastPicks: PickList = {
   items: [
-    pickSummary(basePick as Pick, 'A'),
+    pickSummary(todayPickBeforeVote, 'A'),
     pickSummary(pastPickBeforeVote, 'B'),
     pickSummary(pastPickUnvoted, null),
   ],
@@ -119,9 +121,6 @@ export const emptyPickList: PickList = { items: [], nextCursor: null };
 
 export const memberProfile: MemberProfile = {
   ...cloudProfile,
-  email: null,
-  provider: 'kakao',
-  joinedAt: '2026-08-01T00:00:00.000Z',
 };
 
 export const voteHistory: VoteHistory = {

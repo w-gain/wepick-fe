@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
@@ -6,7 +6,7 @@ import { AuthFlowProvider } from './AuthFlowProvider';
 import { useAuthFlow } from './authFlow';
 
 function AuthFlowFixture() {
-  const { pendingIntent, beginLogin, consumeLoginIntent } = useAuthFlow();
+  const { status, pendingIntent, beginLogin, consumeLoginIntent, retrySession } = useAuthFlow();
   return (
     <>
       <button
@@ -25,9 +25,13 @@ function AuthFlowFixture() {
       <button type="button" onClick={consumeLoginIntent}>
         복귀 정보 사용
       </button>
+      <button type="button" onClick={retrySession}>
+        다시 시도
+      </button>
       <output>
         {pendingIntent ? `${pendingIntent.action}:${pendingIntent.returnTo}` : '없음'}
       </output>
+      <output aria-label="인증 상태">{status}</output>
     </>
   );
 }
@@ -46,5 +50,42 @@ describe('AuthFlowProvider', () => {
 
     await user.click(screen.getByRole('button', { name: '복귀 정보 사용' }));
     expect(screen.getByText('없음')).toBeInTheDocument();
+  });
+
+  it('resolves an unknown initial session without coupling the provider to an API shape', async () => {
+    render(
+      <AuthFlowProvider
+        initialStatus="unknown"
+        resolveInitialStatus={() => Promise.resolve('anonymous')}
+      >
+        <AuthFlowFixture />
+      </AuthFlowProvider>,
+    );
+
+    expect(screen.getByLabelText('인증 상태')).toHaveTextContent('unknown');
+    await waitFor(() => expect(screen.getByLabelText('인증 상태')).toHaveTextContent('anonymous'));
+  });
+
+  it('shows an unavailable state and retries session confirmation', async () => {
+    const user = userEvent.setup();
+    let attempts = 0;
+    render(
+      <AuthFlowProvider
+        initialStatus="unknown"
+        resolveInitialStatus={() => {
+          attempts += 1;
+          return attempts === 1
+            ? Promise.reject(new Error('network unavailable'))
+            : Promise.resolve('authenticated');
+        }}
+      >
+        <AuthFlowFixture />
+      </AuthFlowProvider>,
+    );
+
+    await waitFor(() => expect(screen.getByLabelText('인증 상태')).toHaveTextContent('unavailable'));
+    await user.click(screen.getByRole('button', { name: '다시 시도' }));
+    await waitFor(() => expect(screen.getByLabelText('인증 상태')).toHaveTextContent('authenticated'));
+    expect(attempts).toBe(2);
   });
 });
