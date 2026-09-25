@@ -83,9 +83,13 @@ describe('AuthFlowProvider', () => {
       </AuthFlowProvider>,
     );
 
-    await waitFor(() => expect(screen.getByLabelText('인증 상태')).toHaveTextContent('unavailable'));
+    await waitFor(() =>
+      expect(screen.getByLabelText('인증 상태')).toHaveTextContent('unavailable'),
+    );
     await user.click(screen.getByRole('button', { name: '다시 시도' }));
-    await waitFor(() => expect(screen.getByLabelText('인증 상태')).toHaveTextContent('authenticated'));
+    await waitFor(() =>
+      expect(screen.getByLabelText('인증 상태')).toHaveTextContent('authenticated'),
+    );
     expect(attempts).toBe(2);
   });
 });

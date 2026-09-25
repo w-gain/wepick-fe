@@ -45,7 +45,15 @@ export function AuthFlowProvider({
   }, [pendingIntent]);
 
   const value = useMemo(
-    () => ({ status, pendingIntent, setStatus, retrySession, beginLogin, consumeLoginIntent, cancelLogin }),
+    () => ({
+      status,
+      pendingIntent,
+      setStatus,
+      retrySession,
+      beginLogin,
+      consumeLoginIntent,
+      cancelLogin,
+    }),
     [status, pendingIntent, retrySession, beginLogin, consumeLoginIntent, cancelLogin],
   );
 
