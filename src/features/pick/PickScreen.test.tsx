@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { MemoryRouter } from 'react-router-dom';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { todayPickAfterVote, todayPickBeforeVote } from '../../mocks/fixtures';
 import { handlers } from '../../mocks/handlers';
@@ -15,6 +15,10 @@ import { PickScreen } from './PickScreen';
 const server = setupServer(...handlers);
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+afterEach(() => {
+  server.resetHandlers();
+  vi.restoreAllMocks();
+});
 afterAll(() => server.close());
 
 function renderScreen() {
@@ -97,5 +101,41 @@ describe('PickScreen', () => {
     await user.click(screen.getByRole('button', { name: '취소' }));
     expect(dialog).not.toBeInTheDocument();
     expect(screen.getAllByText('계획이 있으면 여행지에서 마음이 더 편해요.')).toHaveLength(2);
+  });
+
+  it('does not describe unsupported opinion data as an empty opinion list', async () => {
+    server.use(
+      http.get('*/api/__mock/picks/today', () =>
+        HttpResponse.json({
+          ...todayPickAfterVote,
+          opinionsAvailable: false,
+          representativeOpinions: { A: null, B: null },
+        }),
+      ),
+    );
+    renderScreen();
+
+    expect(await screen.findByText('의견 기능은 준비 중이에요')).toBeInTheDocument();
+    expect(screen.queryByText('아직 의견이 없어요')).not.toBeInTheDocument();
+  });
+
+  it('shows the unavailable state when there is no topic for today', async () => {
+    server.use(http.get('*/api/__mock/picks/today', () => new HttpResponse(null, { status: 404 })));
+    renderScreen();
+
+    expect(await screen.findByText('오늘의 Pick을 준비하고 있어요')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '다시 시도' })).toBeInTheDocument();
+  });
+
+  it('does not claim a link was copied when clipboard access fails', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('Clipboard denied'));
+    renderScreen();
+
+    await screen.findByRole('heading', { name: todayPickBeforeVote.question });
+    await user.click(screen.getByRole('button', { name: 'Pick 공유' }));
+
+    expect(await screen.findByText('링크를 복사하지 못했어요.')).toBeInTheDocument();
+    expect(screen.queryByText('링크를 복사했어요.')).not.toBeInTheDocument();
   });
 });

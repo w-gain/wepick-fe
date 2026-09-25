@@ -190,6 +190,12 @@ select {
   color: var(--wp-brand-primary);
   font-size: 26px;
   font-weight: 800;
+  overflow: hidden;
+}
+.profile-summary__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .profile-summary strong {
   font-size: 16px;
@@ -308,7 +314,7 @@ select {
   gap: 8px;
   margin-bottom: 24px;
 }
-.profile-edit-field > span {
+.profile-edit-field > label {
   color: var(--wp-text-secondary);
   font-size: 12px;
   font-weight: 700;
@@ -339,6 +345,16 @@ select {
 }
 .profile-edit-field__error {
   color: var(--wp-danger) !important;
+}
+.profile-edit-field__retry {
+  justify-self: start;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--wp-brand-primary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
 }
 .profile-edit-avatar-wrap > .profile-edit-field__error {
   margin-top: -4px;
@@ -432,6 +448,9 @@ select {
   font-weight: 300;
   line-height: 1;
 }
+.past-pick-list__sentinel {
+  min-height: 1px;
+}
 .past-pick-list__end {
   margin: 8px 0 0;
   color: var(--wp-text-tertiary);
@@ -511,8 +530,7 @@ select {
   font-size: 12px;
   font-weight: 600;
 }
-.pick-meta > span:not(.pick-meta__category)::before,
-.pick-meta > time::before {
+.pick-meta > * + *::before {
   margin-right: 7px;
   content: '·';
   color: var(--wp-border-default);

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import type { Choice, Opinion, Pick } from '../../shared/contracts';
+import { ApiError } from '../../shared/api/client';
 import {
   Button,
   BackIcon,
@@ -19,7 +20,14 @@ import { useAuthFlow } from '../auth/authFlow';
 import { LoginRequiredSheet } from '../auth/LoginRequiredSheet';
 import { OpinionDeleteDialog } from './OpinionDeleteDialog';
 import { OpinionEditorSheet } from './OpinionEditorSheet';
-import { useOpinions, usePick, useVote } from './api';
+import {
+  useOpinions,
+  usePick,
+  useVote,
+  VoteAlreadyRecordedError,
+  VoteResultRefreshError,
+  VoteSessionRequiredError,
+} from './api';
 
 type PickScreenProps = { pickId?: string };
 
@@ -64,10 +72,19 @@ function PickHeader({ detail }: { detail: boolean }) {
           onClick={async () => {
             const url = window.location.href;
             if (navigator.share) {
-              await navigator.share({ title: 'WePick', url }).catch(() => undefined);
-            } else {
-              await navigator.clipboard?.writeText(url);
+              try {
+                await navigator.share({ title: 'WePick', url });
+                return;
+              } catch (error) {
+                if (error instanceof DOMException && error.name === 'AbortError') return;
+              }
+            }
+            try {
+              if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+              await navigator.clipboard.writeText(url);
               notify({ tone: 'success', title: '링크를 복사했어요.' });
+            } catch {
+              notify({ tone: 'error', title: '링크를 복사하지 못했어요.' });
             }
           }}
         >
@@ -82,7 +99,7 @@ function PickHeader({ detail }: { detail: boolean }) {
 function PickMeta({ pick, detail }: { pick: Pick; detail: boolean }) {
   return (
     <div className="pick-meta">
-      <span className="pick-meta__category">취향·일상</span>
+      {pick.category && <span className="pick-meta__category">{pick.category.label}</span>}
       <span>{detail ? '지난 Pick' : '오늘의 Pick'}</span>
       <time dateTime={pick.representativeDate}>{formatDate(pick.representativeDate)}</time>
     </div>
@@ -134,7 +151,7 @@ type OpinionEditorState = {
 };
 
 function ResultAndOpinions({ pick }: { pick: Pick }) {
-  const opinionsQuery = useOpinions(pick.id, Boolean(pick.result));
+  const opinionsQuery = useOpinions(pick.id, Boolean(pick.result) && pick.opinionsAvailable);
   const [filter, setFilter] = useState<'all' | Choice>('all');
   const [loginIntent, setLoginIntent] = useState<LoginIntent | null>(null);
   const [editor, setEditor] = useState<OpinionEditorState | null>(null);
@@ -201,75 +218,90 @@ function ResultAndOpinions({ pick }: { pick: Pick }) {
           labels={{ A: pick.options[0].label, B: pick.options[1].label }}
         />
       )}
-      <div className="representative-opinions">
-        {(['A', 'B'] as const).map((choice) => {
-          const opinion = pick.representativeOpinions[choice];
-          return opinion ? (
-            <OpinionCard
-              key={choice}
-              opinion={opinion}
-              onLike={() => likeOpinion(opinion)}
-              onEdit={() => openEditor({ mode: 'edit', opinion })}
-              onDelete={() => requestDelete(opinion)}
-            />
-          ) : (
-            <div className="representative-opinions__empty" key={choice}>
-              <span className={`choice-label choice-label--${choice.toLowerCase()}`}>{choice}</span>
-              <span>아직 의견이 없어요</span>
+      {pick.opinionsAvailable ? (
+        <>
+          <div className="representative-opinions">
+            {(['A', 'B'] as const).map((choice) => {
+              const opinion = pick.representativeOpinions[choice];
+              return opinion ? (
+                <OpinionCard
+                  key={choice}
+                  opinion={opinion}
+                  onLike={() => likeOpinion(opinion)}
+                  onEdit={() => openEditor({ mode: 'edit', opinion })}
+                  onDelete={() => requestDelete(opinion)}
+                />
+              ) : (
+                <div className="representative-opinions__empty" key={choice}>
+                  <span className={`choice-label choice-label--${choice.toLowerCase()}`}>
+                    {choice}
+                  </span>
+                  <span>아직 의견이 없어요</span>
+                </div>
+              );
+            })}
+          </div>
+          <Button
+            variant="secondary"
+            className="pick-results__opinion-button"
+            onClick={() =>
+              openEditor(
+                ownedOpinion ? { mode: 'edit', opinion: ownedOpinion } : { mode: 'create' },
+              )
+            }
+          >
+            {ownedOpinion ? '내 의견 수정' : '의견 남기기'}
+          </Button>
+          <div className="opinion-list">
+            <div className="opinion-list__header">
+              <h3>서로의 이유</h3>
+              <span className="opinion-list__count">
+                {pick.result?.totalVotes.toLocaleString()}명 참여
+              </span>
+              <div className="filter-tabs" role="tablist" aria-label="의견 필터">
+                {(['all', 'A', 'B'] as const).map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    role="tab"
+                    aria-selected={filter === item}
+                    className={filter === item ? 'is-active' : ''}
+                    onClick={() => setFilter(item)}
+                  >
+                    {item === 'all' ? '전체' : item}
+                  </button>
+                ))}
+              </div>
             </div>
-          );
-        })}
-      </div>
-      <Button
-        variant="secondary"
-        className="pick-results__opinion-button"
-        onClick={() =>
-          openEditor(ownedOpinion ? { mode: 'edit', opinion: ownedOpinion } : { mode: 'create' })
-        }
-      >
-        {ownedOpinion ? '내 의견 수정' : '의견 남기기'}
-      </Button>
-      <div className="opinion-list">
-        <div className="opinion-list__header">
-          <h3>서로의 이유</h3>
-          <span className="opinion-list__count">
-            {pick.result?.totalVotes.toLocaleString()}명 참여
-          </span>
-          <div className="filter-tabs" role="tablist" aria-label="의견 필터">
-            {(['all', 'A', 'B'] as const).map((item) => (
-              <button
-                key={item}
-                type="button"
-                role="tab"
-                aria-selected={filter === item}
-                className={filter === item ? 'is-active' : ''}
-                onClick={() => setFilter(item)}
-              >
-                {item === 'all' ? '전체' : item}
-              </button>
+            {opinionsQuery.isLoading && <LoadingState label="의견을 불러오는 중이에요" />}
+            {opinionsQuery.isError && (
+              <ErrorState
+                description="의견을 불러오지 못했어요."
+                onRetry={() => opinionsQuery.refetch()}
+              />
+            )}
+            {!opinionsQuery.isLoading &&
+              !opinionsQuery.isError &&
+              filteredOpinions.length === 0 && (
+                <EmptyState title="아직 의견이 없어요" description="첫 의견을 남겨보세요." />
+              )}
+            {filteredOpinions.map((opinion) => (
+              <OpinionCard
+                key={opinion.id}
+                opinion={opinion}
+                onLike={() => likeOpinion(opinion)}
+                onEdit={() => openEditor({ mode: 'edit', opinion })}
+                onDelete={() => requestDelete(opinion)}
+              />
             ))}
           </div>
-        </div>
-        {opinionsQuery.isLoading && <LoadingState label="의견을 불러오는 중이에요" />}
-        {opinionsQuery.isError && (
-          <ErrorState
-            description="의견을 불러오지 못했어요."
-            onRetry={() => opinionsQuery.refetch()}
-          />
-        )}
-        {!opinionsQuery.isLoading && !opinionsQuery.isError && filteredOpinions.length === 0 && (
-          <EmptyState title="아직 의견이 없어요" description="첫 의견을 남겨보세요." />
-        )}
-        {filteredOpinions.map((opinion) => (
-          <OpinionCard
-            key={opinion.id}
-            opinion={opinion}
-            onLike={() => likeOpinion(opinion)}
-            onEdit={() => openEditor({ mode: 'edit', opinion })}
-            onDelete={() => requestDelete(opinion)}
-          />
-        ))}
-      </div>
+        </>
+      ) : (
+        <EmptyState
+          title="의견 기능은 준비 중이에요"
+          description="현재 Pick 의견을 제공하지 않아요."
+        />
+      )}
       <LoginRequiredSheet
         open={loginIntent !== null}
         actionLabel={
@@ -338,8 +370,9 @@ function PickStateShell({ detail, children }: { detail: boolean; children: React
 export function PickScreen({ pickId }: PickScreenProps) {
   const detail = Boolean(pickId);
   const query = usePick(pickId);
-  const vote = useVote(query.data?.id ?? pickId ?? 'today');
+  const vote = useVote(query.data);
   const [choice, setChoice] = useState<Choice | null>(null);
+  const [recordedPickId, setRecordedPickId] = useState<string | null>(null);
   const { notify } = useToast();
 
   if (query.isLoading)
@@ -348,12 +381,17 @@ export function PickScreen({ pickId }: PickScreenProps) {
         <LoadingState label="Pick을 불러오는 중이에요" />
       </PickStateShell>
     );
-  if (query.isError || !query.data) {
+  if (!query.data) {
+    const noTodayPick = !detail && query.error instanceof ApiError && query.error.status === 404;
     return (
       <PickStateShell detail={detail}>
         <ErrorState
-          title="Pick을 불러오지 못했어요"
-          description="잠시 후 다시 시도해 주세요."
+          title={noTodayPick ? '오늘의 Pick을 준비하고 있어요' : 'Pick을 불러오지 못했어요'}
+          description={
+            noTodayPick
+              ? '아직 오늘의 질문이 없어요. 잠시 후 다시 확인해 주세요.'
+              : '잠시 후 다시 시도해 주세요.'
+          }
           onRetry={() => query.refetch()}
         />
       </PickStateShell>
@@ -362,14 +400,31 @@ export function PickScreen({ pickId }: PickScreenProps) {
 
   const pick = query.data;
   const voted = Boolean(pick.userVote);
+  const awaitingResult = recordedPickId === pick.id && !voted;
   const selectedChoice = voted ? pick.userVote : choice;
 
   async function submitVote() {
-    if (!choice || vote.isPending) return;
+    if (!choice || vote.isPending || awaitingResult) return;
     try {
       await vote.mutateAsync(choice);
       notify({ tone: 'success', title: '투표를 반영했어요.' });
-    } catch {
+    } catch (error) {
+      if (error instanceof VoteAlreadyRecordedError) {
+        notify({ tone: 'info', title: '이미 반영된 투표예요.' });
+        return;
+      }
+      if (error instanceof VoteResultRefreshError) {
+        setRecordedPickId(pick.id);
+        return;
+      }
+      if (error instanceof VoteSessionRequiredError) {
+        notify({
+          tone: 'info',
+          title: '현재 투표를 진행할 수 없어요.',
+          description: '현재 BE는 로그인한 사용자의 투표만 지원해요.',
+        });
+        return;
+      }
       notify({
         tone: 'error',
         title: '투표를 반영하지 못했어요.',
@@ -389,7 +444,13 @@ export function PickScreen({ pickId }: PickScreenProps) {
       <div className="pick-screen__question">
         <h1 id="pick-question">{pick.question}</h1>
       </div>
-      {!voted ? (
+      {awaitingResult ? (
+        <ErrorState
+          title="투표는 반영됐어요"
+          description="결과를 불러오지 못했어요. 결과만 다시 불러와 주세요."
+          onRetry={() => query.refetch()}
+        />
+      ) : !voted ? (
         <div className="pick-vote-area">
           <div className="pick-options">
             {pick.options.map((option) => (

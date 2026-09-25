@@ -4,6 +4,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
 import { routes } from './router';
+import { AuthFlowProvider } from '../features/auth/AuthFlowProvider';
 import { ToastProvider } from '../shared/ui';
 
 describe('application routes', () => {
@@ -13,9 +14,11 @@ describe('application routes', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
       <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <RouterProvider router={testRouter} />
-        </ToastProvider>
+        <AuthFlowProvider>
+          <ToastProvider>
+            <RouterProvider router={testRouter} />
+          </ToastProvider>
+        </AuthFlowProvider>
       </QueryClientProvider>,
     );
 
